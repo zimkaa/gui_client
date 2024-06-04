@@ -28,14 +28,17 @@ async def connect() -> Connection:
 
     logger.debug("real_ip=%s settings=%s", real_ip, settings)
     if settings.connection.PROXY_IP in real_ip:
-        logger.info(f"\n-------ip------- {real_ip} LOGIN {settings.person.LOGIN}" * 5)
+        text = f"\n-------ip------- {real_ip} LOGIN {settings.person.LOGIN}" * 5
+        logger.info(text)
     else:
-        logger.error(f"{settings.person.LOGIN} {settings.connection.PROXY_IP=} not in real IP={real_ip}")
+        text = f"{settings.person.LOGIN} {settings.connection.PROXY_IP=} not in real IP={real_ip}"
+        logger.error(text)
         msg = "Wrong IP or proxy not work"
         raise WrongIPError(msg)
 
     try:
-        logger.debug(f"{settings.connection.PROXY=}")
+        text = f"{settings.connection.PROXY=}"
+        logger.debug(text)
         connection = Connection(
             proxy=settings.connection.PROXY,
             login=settings.person.LOGIN,
@@ -44,6 +47,6 @@ async def connect() -> Connection:
         logger.debug("connect connection id = %s", id(connection))
         await connection.start()
     except Exception as err:
-        logger.error(f"{err=}")
+        logger.error("err=%s", err)
         raise
     return connection

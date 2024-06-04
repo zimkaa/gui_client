@@ -38,10 +38,12 @@ class Game:
             real_ip = await my_ip(use_proxy=False)
 
         if ip in real_ip:
-            logger.info(f"\n-------ip------- {real_ip} LOGIN {login}" * 5)
+            text = f"\n-------ip------- {real_ip} LOGIN {login}" * 5
+            logger.info(text)
             self.error = False
         else:
-            logger.error(f"{login} {ip=} not in real IP={real_ip}")
+            text = f"{login} {ip=} not in real IP={real_ip}"
+            logger.error(text)
             self.error = True
 
         if not self.error:
@@ -54,7 +56,7 @@ class Game:
                 await self.connection.start()
                 self.online = True
             except Exception as err:  # noqa: BLE001
-                logger.error(f"{err=}")
+                logger.error("err=%s", err)
 
     async def close(self) -> None:
         await self.connection.close()
@@ -64,7 +66,8 @@ class Game:
         for name in names:
             nick = name.encode("cp1251")
             tasks.append(asyncio.create_task(self.get_info(nick)))
-            logger.error(f"{name=}")
+            text = f"{name=}"
+            logger.error(text)
 
         return await asyncio.gather(*tasks)
 
@@ -114,7 +117,7 @@ class Game:
         }
 
         # TODO: need do retry get  # noqa: TD003, FIX002, TD002
-        answer = await self.connection.get_html(site_url, data=data)
+        answer = await self.connection.get_html(site_url, data=data, log_response=True)
         self.clan = answer
         return answer
 

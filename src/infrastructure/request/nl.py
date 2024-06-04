@@ -14,6 +14,7 @@ from urllib.parse import quote
 import aiohttp
 
 from src.config import logger
+from src.config import settings
 from src.config.game import connection
 
 # from tenacity import retry  # noqa: ERA001
@@ -199,7 +200,7 @@ class Connection(BaseConnection):
         if answer.status == HTTPStatus.OK:
             result = await answer.text()
             text = f"{self.login} {func.f_code.co_name} {data=} {site_url=}"
-            if log_response:
+            if log_response and settings.DEBUG:
                 text += f" {result=}"
             self._write_all_debug_logs(text)
             return result
@@ -262,7 +263,7 @@ class Connection(BaseConnection):
         if answer.status == HTTPStatus.OK:
             result = await answer.text()
             text = f"{self.login} {func.f_code.co_name} {data=} {site_url=}"
-            if log_response:
+            if log_response and settings.DEBUG:
                 text += f" {result=}"
             self._write_all_debug_logs(text)
             return result
