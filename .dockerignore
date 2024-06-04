@@ -1,14 +1,21 @@
 ## folders
 .venv/
+.venv*/
 .env/
 __pycache__/
 .pytest_cache/
 .mypy_cache/
+.vscode/
+
+# project
+INFO/
+cookies/
 
 ## files
 *.pyc
 *.log
 *.log.zip
+*.log.*
 .python-version
 .pre-commit-config.yaml
 my_install.sh

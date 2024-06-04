@@ -11,17 +11,23 @@ pydantic = "^2.7.3"
 pydantic-settings = "^2.3.0"
 tomli = "^2.0.1"
 pyyaml = "^6.0.1"
-
+sentry-sdk = "^2.4.0"
+flet = "^0.22.1"
+aiohttp = "^3.9.5"
+dependency-injector = "^4.41.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.7"
 mypy = "^1.10.0"
 pytest = "^8.2.1"
 pre-commit = "^3.7.1"
+vulture = "^2.11"
+pytest-asyncio = "^0.23.7"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
 [tool.pytest.ini_options]
 addopts = "-vvv"
 asyncio_mode="auto"
@@ -108,3 +114,48 @@ ignore = []
 include = ["src"]
 pythonVersion = "3.11"
 reportInvalidTypeForm = "none"
+
+[tool.vulture]
+exclude = [
+    # project specific
+    "src/domain/value_object/base.py",
+    "src/domain/value_object/classes.py",
+    "src/use_cases/person/base.py",
+    "src/game.py",
+    "src/infrastructure/errors/game.py",
+    "src/infrastructure/errors/request.py",
+    "src/domain/value_object/schemas/data_schema.py",
+    "src/domain/pattern/fight/compiled.py",
+    "src/config/settings.py",
+    "src/application/app.py",
+    "src/domain/pattern/fight/pattern.py",
+    "src/infrastructure/flet_comp/component/textfield.py",
+    "src/domain/pattern/person/compiled.py",
+    "src/config/game/urls.py",
+    "src/config/game/persons.py",
+    "src/config/game/ip.py",
+    "src/application/deps/main.py",
+    "src/domain/pattern/effect/compiled.py",
+    "src/domain/pattern/location/compiled.py",
+    "src/domain/pattern/effect/pattern.py",
+    "src/domain/pattern/chat/compiled.py",
+    "src/config/game/url_encode.py",
+    "src/infrastructure/request/nl.py",
+    "src/infrastructure/errors/exception.py",
+    "src/infrastructure/connection.py",
+    "src/use_cases/request/base.py",
+    "src/use_cases/person/parameter.py",
+    "src/domain/pattern/location/pattern.py:",
+    "src/domain/pattern/person/pattern.py",
+    "src/domain/pattern/location/pattern.py",
+    "src/domain/pattern/chat/pattern.py",
+    "src/config/game/constants.py",
+    "src/config/game/connection.py",
+]
+paths = ["src"]
+sort_by_size = true
+# min_confidence = 80
+ignore_names = [
+    "model_config",  # pydantic
+    # project specific
+]

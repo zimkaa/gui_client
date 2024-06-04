@@ -24,18 +24,10 @@ tasks:
       - envsubst < .pre-commit-config.yaml.template > .pre-commit-config.yaml
       - echo "The .pre-commit-config.yaml file has been generated."
 
-  install-pre-commit-config:
-    desc: "Install pre-commit with generated .pre-commit-config.yaml"
+  update-pre-commit-config:
+    desc: "Install or Update versions .pre-commit-config.yaml and poetry update"
     cmds:
       - pre-commit install
-      - poetry update
-      - task generate-pre-commit-config
-      - pre-commit autoupdate
-      - echo "The pre-commit installed and updated."
-
-  update-pre-commit-config:
-    desc: "Update versions .pre-commit-config.yaml and poetry update"
-    cmds:
       - poetry update
       - task generate-pre-commit-config
       - pre-commit autoupdate

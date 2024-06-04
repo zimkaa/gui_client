@@ -10,7 +10,9 @@ WORKDIR /app
 
 COPY ./pyproject.toml ./poetry.lock /app/
 
-RUN pip install poetry && poetry install --no-dev
+RUN pip install poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-dev
 
 ###########
 ## IMAGE ##

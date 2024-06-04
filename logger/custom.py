@@ -37,7 +37,9 @@ YELLOW = "\x1b[38;5;226m"
 BLUE = "\x1b[38;5;21m"
 NC = "\x1b[0m"
 
-DATEFMT = "%Y-%m-%dT%H:%M:%S%z"
+DATEFMT = "%Y-%m-%d %H:%M:%S"
+DEFAULT_MSEC_FORMAT = "%s,%03d"
+DEFAULT_TZ_FORMAT = "%s %s"
 
 
 class StdoutCustomFormatter(logging.Formatter):
@@ -46,12 +48,7 @@ class StdoutCustomFormatter(logging.Formatter):
         *,
         fmt_keys: dict[str, str] | None = None,
     ) -> None:
-        super().__init__()
         self.fmt_keys = fmt_keys if fmt_keys is not None else {}
-
-        self.format_date = self.fmt_keys.get("datefmt", None)
-        if self.format_date is None:
-            self.format_date = DATEFMT
 
         format_string = self.fmt_keys.get("format", None)
         if format_string is None:
@@ -71,8 +68,20 @@ class StdoutCustomFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         log_fmt = self.FORMATS.get(record.levelno)
+        self.format_date = self.fmt_keys.get("datefmt", None)
         formatter = logging.Formatter(log_fmt, datefmt=self.format_date)
+        formatter.formatTime = self.formatTime  # type: ignore[method-assign]  # TODO fix this  # noqa: TD002, TD004, TD003, FIX002
         return formatter.format(record)
+
+    def formatTime(self, record: logging.LogRecord, datefmt: str | None = None) -> str:  # noqa: N802
+        ct = self.converter(record.created)
+        timestamp = time.strftime(datefmt, ct) if datefmt else time.strftime(DATEFMT, ct)
+
+        if not datefmt:
+            timestamp = DEFAULT_MSEC_FORMAT % (timestamp, record.msecs)
+
+        zone = time.strftime("%z", ct)
+        return DEFAULT_TZ_FORMAT % (timestamp, zone)
 
 
 class JSONCustomFormatter(logging.Formatter):
@@ -83,6 +92,9 @@ class JSONCustomFormatter(logging.Formatter):
     ) -> None:
         super().__init__()
         self.fmt_keys = fmt_keys if fmt_keys is not None else {}
+        format_string = self.fmt_keys.get("format", None)
+        if format_string is None:
+            format_string = "%(asctime)s | %(levelname)8s | %(filename)s:%(lineno)3d | %(message)s"
 
     def format(self, record: logging.LogRecord) -> str:
         message = self._prepare_log_dict(record)
@@ -90,7 +102,10 @@ class JSONCustomFormatter(logging.Formatter):
 
     def _prepare_log_dict(self, record: logging.LogRecord) -> dict[str, str]:
         ct = self.converter(record.created)
-        timestamp = time.strftime(DATEFMT, ct)
+        prepare_timestamp = time.strftime(DATEFMT, ct)
+        zone = time.strftime("%z", ct)
+        formatted_timestamp = DEFAULT_MSEC_FORMAT % (prepare_timestamp, record.msecs)
+        timestamp = DEFAULT_TZ_FORMAT % (formatted_timestamp, zone)
         always_fields = {
             "message": record.getMessage(),
             "timestamp": timestamp,
