@@ -1,0 +1,94 @@
+version: "3"
+
+tasks:
+  default:
+    - task: help
+
+  help:
+    desc: "List all tasks"
+    silent: true
+    cmds:
+      - task --list-all
+
+  generate-pre-commit-config:
+    desc: "Generate .pre-commit-config.yaml file from .pre-commit-config.yaml.template"
+    silent: true
+    preconditions:
+      - test -f .pre-commit-config.yaml.template
+    generates:
+      - .pre-commit-config.yaml
+    env:
+      PRE_COMMIT_ADDITIONAL_DEPENDENCIES:
+        sh: echo "$(poetry export --with dev --without-hashes | while read line; do echo "          - $(echo ${line} | sed "s/^[[:space:]]*//")"; done)"
+    cmds:
+      - envsubst < .pre-commit-config.yaml.template > .pre-commit-config.yaml
+      - echo "The .pre-commit-config.yaml file has been generated."
+
+  install-pre-commit-config:
+    desc: "Install pre-commit with generated .pre-commit-config.yaml"
+    cmds:
+      - pre-commit install
+      - poetry update
+      - task generate-pre-commit-config
+      - pre-commit autoupdate
+      - echo "The pre-commit installed and updated."
+
+  update-pre-commit-config:
+    desc: "Update versions .pre-commit-config.yaml and poetry update"
+    cmds:
+      - poetry update
+      - task generate-pre-commit-config
+      - pre-commit autoupdate
+      - echo "The pre-commit updated."
+
+  lint:
+    desc: "Run pre-commit run --all-files"
+    preconditions:
+      - test -f .pre-commit-config.yaml
+    cmds:
+      - pre-commit run --all-files
+
+  build-version:
+    desc: "Generate version. Example for generate production version: task build-version -- -p"
+    env:
+      APP_VERSION:
+        sh: python -m src.config.builder {{.CLI_ARGS}}
+      APP_NAME:
+        sh: python -m src.config.get_name
+    cmds:
+      - sed -i .bak -e "s/^APP_VERSION=.*/APP_VERSION=${APP_VERSION}/; s/^APP_NAME=.*/APP_NAME=${APP_NAME}/" build_version
+      - echo "build version set up APP_VERSION=${APP_VERSION} APP_NAME=${APP_NAME}"
+
+  build-docker-without-run:
+    desc: "Build docker container Example: task build-docker-without-run -- -p"
+    cmds:
+      - task build-version -- {{.CLI_ARGS}}
+      - docker compose -f docker-compose-dev.yaml --env-file ./build_version create --build
+
+  # push-docker-container:
+  #   desc: "Push docker container to docker hub"
+  #   cmds:
+  #     - docker image push --all-tags zimkaa/sales_bot
+
+  run-docker:
+    desc: Run docker container
+    cmds:
+      - docker compose -f docker-compose-dev.yaml --env-file ./build_version up -d
+
+  stop-docker:
+    desc: Stop docker container
+    cmds:
+      - docker compose -f docker-compose-dev.yaml --env-file ./build_version down
+
+  # test:
+  #   desc: Run tests
+  #   cmds:
+  #     - python -m coverage run
+  #     - python -m coverage report -m
+  #     - python -m coverage html
+
+  test-deploy:
+    desc: Action test locally
+    cmds:
+      # - act -j docker-build-push --container-architecture linux/amd64 --var-file .vars --secret-file .secrets -e event.json
+      - act --container-architecture linux/amd64 --var-file .vars --secret-file .secrets -e event.json

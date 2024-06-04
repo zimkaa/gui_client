@@ -1,0 +1,21 @@
+## folders
+.venv/
+.env/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+
+## files
+*.pyc
+*.log
+*.log.zip
+.python-version
+.pre-commit-config.yaml
+my_install.sh
+.DS_Store
+
+# dotenv
+.env
+.dev.env
+.secrets
+.vars

@@ -1,0 +1,8 @@
+version: 3.8
+
+services:
+  YOUR_SERVICE:
+    build: .
+    container_name: "${APP_NAME}-${APP_VERSION}"
+    image: ${APP_NAME}:${APP_VERSION}
+    env_file: .dev.env
