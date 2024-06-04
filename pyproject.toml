@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gui-client"
+name = "gui_client"
 version = "0.1.0"
 description = ""
 authors = ["Anton Zimin <zimkaa87@gmail.com>"]
