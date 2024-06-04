@@ -81,7 +81,7 @@ class Connection(BaseConnection):
     def _is_valid_cookies(self) -> bool:
         logger.debug("_is_valid_cookies?")
         if not os.listdir(COOKIE_FOLDER):
-            logger.error(f"NO FILE {COOKIE_FOLDER=}")
+            logger.error("NO FILE COOKIE_FOLDER=%s", COOKIE_FOLDER)
             return False
 
         dt = datetime.now()  # noqa: DTZ005
@@ -95,7 +95,7 @@ class Connection(BaseConnection):
         self._cookies[("neverlands.ru", "/")] = SimpleCookie(info)
 
         if not self._cookies.get(("neverlands.ru", "/")).get("NeverExpi"):  # type: ignore[union-attr]
-            logger.error(f"NO COOKIES {self._cookies=}")
+            logger.error("NO COOKIES %s", self._cookies)
             return False
         timestamp = self._cookies.get(("neverlands.ru", "/")).get("NeverExpi").value  # type: ignore[union-attr]
 
@@ -104,7 +104,7 @@ class Connection(BaseConnection):
         login = quote(self.login, encoding=constants.ENCODING)
 
         if user != login:
-            logger.error(f"Cookie another person {user=} != {login=}")
+            logger.error("Cookie another person user-%s != login-%s", user, login)
             return False
         if int(dt_without_microseconds.timestamp()) >= int(timestamp):
             logger.error("int(dt_without_microseconds.timestamp()) >= int(timestamp)")

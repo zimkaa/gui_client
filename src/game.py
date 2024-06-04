@@ -32,13 +32,8 @@ class Game:
     ) -> None:
         if proxy:
             assert proxy_url
-            {
-                "http": proxy_url,
-                "https": proxy_url.replace("http:", "https:"),
-            }
             real_ip = await my_ip(use_proxy=True)
             os.environ.setdefault("HTTP_PROXY", proxy_url)
-            os.environ.setdefault("HTTPS_PROXY", proxy_url.replace("http:", "https:"))
         else:
             real_ip = await my_ip(use_proxy=False)
 
