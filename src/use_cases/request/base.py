@@ -17,9 +17,16 @@ class BaseConnection(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_html(self, site_url: str, data: dict | None = None) -> str:
+    async def get_html(self, site_url: str, *, data: dict | None = None, log_response: bool = False) -> str:
         raise NotImplementedError
 
     @abstractmethod
-    async def post_html(self, site_url: str, data: dict | None = None) -> str:
+    async def post_html(
+        self,
+        site_url: str,
+        *,
+        data: dict | None = None,
+        log_response: bool = False,
+        auth: bool = False,
+    ) -> str:
         raise NotImplementedError

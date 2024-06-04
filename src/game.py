@@ -114,7 +114,7 @@ class Game:
         }
 
         # TODO: need do retry get  # noqa: TD003, FIX002, TD002
-        answer = await self.connection.get_html(site_url, data)
+        answer = await self.connection.get_html(site_url, data=data)
         self.clan = answer
         return answer
 

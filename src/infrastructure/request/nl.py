@@ -140,7 +140,7 @@ class Connection(BaseConnection):
         await self.get_html(urls.URL)
         if self._data:
             logger.debug("try to login")
-            await self.post_html(urls.URL_GAME, self._data, auth=True)  # type: ignore[arg-type]
+            await self.post_html(urls.URL_GAME, data=self._data, auth=True)  # type: ignore[arg-type]
         else:
             text = f"No login data {self._data=}"
             logger.error(text)
@@ -186,7 +186,7 @@ class Connection(BaseConnection):
     #     stop=stop_after_attempt(3),  # noqa: ERA001
     #     reraise=True,  # noqa: ERA001
     # )  # noqa: ERA001, RUF100
-    async def get_html(self, site_url: str, data: dict | None = None) -> str:
+    async def get_html(self, site_url: str, *, data: dict | None = None, log_response: bool = False) -> str:
         func = inspect.currentframe()
         assert func
 
@@ -198,7 +198,9 @@ class Connection(BaseConnection):
 
         if answer.status == HTTPStatus.OK:
             result = await answer.text()
-            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=} {result=}"
+            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=}"
+            if log_response:
+                text += f" {result=}"
             self._write_all_debug_logs(text)
             return result
 
@@ -234,7 +236,14 @@ class Connection(BaseConnection):
     #     stop=stop_after_attempt(3),  # noqa: ERA001
     #     reraise=True,  # noqa: ERA001
     # )  # noqa: ERA001, RUF100
-    async def post_html(self, site_url: str, data: dict | None = None, auth: bool = False) -> str:  # noqa: FBT002, FBT001
+    async def post_html(
+        self,
+        site_url: str,
+        *,
+        data: dict | None = None,
+        log_response: bool = False,
+        auth: bool = False,
+    ) -> str:
         func = inspect.currentframe()
         assert func
 
@@ -252,7 +261,9 @@ class Connection(BaseConnection):
 
         if answer.status == HTTPStatus.OK:
             result = await answer.text()
-            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=} {result=}"
+            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=}"
+            if log_response:
+                text += f" {result=}"
             self._write_all_debug_logs(text)
             return result
 
