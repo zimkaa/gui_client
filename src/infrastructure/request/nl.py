@@ -197,9 +197,10 @@ class Connection(BaseConnection):
             print_debug_text += f"{key}: {value}\n"
 
         if answer.status == HTTPStatus.OK:
-            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=}"
+            result = await answer.text()
+            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=} {result=}"
             self._write_all_debug_logs(text)
-            return await answer.text()
+            return result
 
         if answer.status == HTTPStatus.BAD_GATEWAY:
             text = f"{self.login} {func.f_code.co_name} {answer.status=}\n {data=} {site_url=}\n"
@@ -250,9 +251,10 @@ class Connection(BaseConnection):
             print_debug_text += f"{key}: {value}\n"
 
         if answer.status == HTTPStatus.OK:
-            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=}"
+            result = await answer.text()
+            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=} {result=}"
             self._write_all_debug_logs(text)
-            return await answer.text()
+            return result
 
         if answer.status == HTTPStatus.BAD_GATEWAY:
             text = f"{self.login} {func.f_code.co_name} {answer.status=}\n {data=} {site_url=}\n"
