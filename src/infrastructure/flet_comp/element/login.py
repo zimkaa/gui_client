@@ -3,15 +3,14 @@ import flet as ft
 from src.config import settings
 
 
-# PROXY = ft.Checkbox(label="Proxy off/on", value=True, on_change=checkbox_changed)  # noqa: ERA001
-
-
 def create_text_field(**kwarg) -> ft.TextField:  # noqa: ANN003
     return ft.TextField(
         **kwarg,
         width=200,
     )
 
+
+LABEL_PROXY = ft.Markdown(value="Proxy")
 
 IP = create_text_field(
     label="proxy ip",

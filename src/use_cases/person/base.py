@@ -30,7 +30,7 @@ class Person:
         self.need_parameters: list[str | None] = []
 
         self.info_page_text = ""
-        self.person_url_info = urls.URL_PLAYER_INFO + quote(self.login)
+        self.person_url_info = urls.URL_PLAYER_INFO.format(name=quote(self.login))
 
         self.parameters: list[list[str | int], list[list[str, int, int], list[str, int]]] | None = None  # type: ignore[type-arg]
 

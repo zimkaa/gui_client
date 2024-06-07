@@ -127,6 +127,9 @@ reportInvalidTypeForm = "none"
 [tool.vulture]
 exclude = [
     # project specific
+    "src/infrastructure/flet_comp/element/main.py",
+    "src/infrastructure/flet_comp/component/main.py",
+    "src/infrastructure/flet_comp/element/login.py",
     "src/domain/item/actions.py",
     "src/domain/item/base.py",
     "src/domain/item/property.py",
@@ -188,5 +191,5 @@ ignore_names = [
     "horizontal_alignment",
     "on_route_change",
     "on_view_pop",
-
+    "e",
 ]
