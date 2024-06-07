@@ -60,6 +60,12 @@ class Connection(BaseConnection):
         self.cookies_txt_file_path = COOKIE_FOLDER / f"{login}_cookies.txt"
         self.cookies_binary_file_path = COOKIE_FOLDER / f"{login}_cookie"
         self.proxy_data = proxy_data
+        self.proxy_kwargs = {}
+        if proxy_data:
+            self.proxy_kwargs = {
+                "proxy": proxy_data.proxy,
+                "proxy_auth": proxy_data.proxy_auth,
+            }
         form_data = aiohttp.FormData(charset="windows-1251")  # cp1251
         form_data.add_field("player_nick", login)
         form_data.add_field("player_password", password)
@@ -81,9 +87,9 @@ class Connection(BaseConnection):
 
     def _set_session(self) -> None:
         logger.debug("_set_session")
-        # self._session = aiohttp.ClientSession(trust_env=self.proxy, headers=constants.HEADER)  # noqa: ERA001
         self._session = aiohttp.ClientSession(
             headers=constants.HEADER,
+            timeout=aiohttp.ClientTimeout(total=10),
         )
 
     async def close(self) -> None:
@@ -159,7 +165,10 @@ class Connection(BaseConnection):
         await self.get_html(urls.URL)
 
         logger.debug("try to login")
-        await self.post_html(urls.URL_GAME, data=self._data, auth=True)  # type: ignore[arg-type]
+        auth_headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        await self.post_html(urls.URL_GAME, data=self._data, auth_headers=auth_headers)  # type: ignore[arg-type]
 
         self._save_cookies()
         return await self.get_html(urls.URL_MAIN)
@@ -186,7 +195,7 @@ class Connection(BaseConnection):
 
         self._save_cookies()
         # await self.get_html(urls.URL_MAIN)  # noqa: ERA001
-        await self.get_html(urls.URL_PHARMACY)
+        # await self.get_html(urls.URL_PHARMACY)  # noqa: ERA001
 
     def _write_all_debug_logs(self, text: str) -> None:
         request_file_logger.debug(text)
@@ -207,14 +216,7 @@ class Connection(BaseConnection):
         func = inspect.currentframe()
         assert func
 
-        kwargs = {}
-        if self.proxy_data:
-            kwargs = {
-                "proxy": self.proxy_data.proxy,
-                "proxy_auth": self.proxy_data.proxy_auth,
-            }
-
-        answer = await self._session.get(site_url, params=params, **kwargs)  # type: ignore[arg-type]
+        answer = await self._session.get(site_url, params=params, **self.proxy_kwargs)  # type: ignore[arg-type]
 
         print_debug_text = ""
         for key, value in answer.__dict__.items():
@@ -266,25 +268,15 @@ class Connection(BaseConnection):
         *,
         data: dict | None = None,
         log_response: bool = False,
-        auth: bool = False,
+        auth_headers: dict[str, str] | None = None,
     ) -> str:
         func = inspect.currentframe()
         assert func
 
-        kwargs = {}
-        if self.proxy_data:
-            kwargs = {
-                "proxy": self.proxy_data.proxy,
-                "proxy_auth": self.proxy_data.proxy_auth,
-            }
-
-        if auth:
-            headers = {
-                "Content-Type": "application/x-www-form-urlencoded",
-            }
-            answer = await self._session.post(site_url, data=data, headers=headers, **kwargs)
+        if auth_headers:
+            answer = await self._session.post(site_url, data=data, headers=auth_headers, **self.proxy_kwargs)
         else:
-            answer = await self._session.post(site_url, data=data, **kwargs)
+            answer = await self._session.post(site_url, data=data, **self.proxy_kwargs)
 
         print_debug_text = ""
         for key, value in answer.__dict__.items():

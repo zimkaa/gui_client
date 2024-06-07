@@ -39,6 +39,6 @@ class BaseConnection(ABC):
         *,
         data: dict | None = None,
         log_response: bool = False,
-        auth: bool = False,
+        auth_headers: dict | None = None,
     ) -> str:
         raise NotImplementedError
