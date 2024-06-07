@@ -1,7 +1,6 @@
-import flet as ft
 import sentry_sdk
 
-from src.application.app import app
+from src.application.app import run_app
 from src.config import settings
 
 
@@ -13,4 +12,4 @@ sentry_sdk.init(
 
 
 def main() -> None:
-    ft.app(target=app)
+    run_app()

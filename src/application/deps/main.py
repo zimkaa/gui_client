@@ -1,7 +1,7 @@
 from dependency_injector import containers
 from dependency_injector import providers
 
-from src.infrastructure.connection import connect
+from src.infrastructure.connection import connection_factory
 from src.infrastructure.request.nl import BaseConnection
 
 
@@ -12,4 +12,4 @@ class MainContainer(containers.DeclarativeContainer):
         ],
     )
 
-    connection: providers.Singleton[BaseConnection] = providers.Singleton(connect)  # type: ignore[arg-type]
+    connection: providers.Factory[BaseConnection] = providers.Factory(connection_factory)  # type: ignore[arg-type]

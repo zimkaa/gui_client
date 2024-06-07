@@ -1,48 +1,61 @@
-import os
+from __future__ import annotations
+from dataclasses import dataclass
+
+import aiohttp
 
 from src.config import logger
-from src.config import settings
 from src.infrastructure.errors.exception import WrongIPError
 from src.infrastructure.request import Connection
 from src.infrastructure.request import my_ip
+from src.use_cases.request.base import Proxy
 
 
-async def connect() -> Connection:
-    if settings.connection.PROXY:
-        logger.debug("Proxy on")
-        login = settings.connection.PROXY_LOG
-        password = settings.connection.PROXY_PASS
-        port = settings.connection.PROXY_PORT
-        ip = settings.connection.PROXY_IP
-        protocol_http = "http"
-        proxy_url_http = f"{protocol_http}://{login}:{password}@{ip}:{port}"
-        real_ip = await my_ip(use_proxy=True)
-        os.environ.setdefault("HTTP_PROXY", proxy_url_http)
+@dataclass
+class ProxyInfo:
+    active: bool
+    login: str
+    password: str
+    port: str
+    ip: str
 
-        # protocol_https = "https"  # noqa: ERA001
-        # proxy_url_https = f"{protocol_https}://{login}:{password}@{ip}:{port}"  # noqa: ERA001
-        # os.environ.setdefault("HTTPS_PROXY", proxy_url_https)  # noqa: ERA001
+
+@dataclass
+class PersonWithConnectionData:
+    login: str
+    password: str
+    proxy: ProxyInfo
+
+
+def prepare_proxy_data(proxy: ProxyInfo) -> Proxy:
+    protocol_http = "http"
+    proxy_url = f"{protocol_http}://{proxy.ip}:{proxy.port}"
+    return Proxy(proxy=proxy_url, proxy_auth=aiohttp.BasicAuth(proxy.login, proxy.password))
+
+
+async def connection_factory(person: PersonWithConnectionData) -> Connection:
+    if person.proxy.active:
+        proxy_data = prepare_proxy_data(person.proxy)
+        real_ip = await my_ip(user_proxy=proxy_data)
     else:
-        logger.debug("Proxy off")
-        real_ip = await my_ip(use_proxy=False)
+        real_ip = await my_ip(user_proxy=None)
 
-    logger.debug("real_ip=%s settings=%s", real_ip, settings)
-    if settings.connection.PROXY_IP in real_ip:
-        text = f"\n-------ip------- {real_ip} LOGIN {settings.person.LOGIN}" * 5
+    logger.debug("real_ip=%s person.proxy.ip=%s", real_ip, person.proxy.ip)
+    if person.proxy.ip in real_ip:
+        text = f"\n-------ip------- {real_ip} LOGIN {person.login}" * 5
         logger.info(text)
     else:
-        text = f"{settings.person.LOGIN} {settings.connection.PROXY_IP=} not in real IP={real_ip}"
+        text = f"{person.login} {person.proxy.ip=} not in real IP={real_ip}"
         logger.error(text)
         msg = "Wrong IP or proxy not work"
         raise WrongIPError(msg)
 
     try:
-        text = f"{settings.connection.PROXY=}"
+        text = f"{person.proxy.active=}"
         logger.debug(text)
         connection = Connection(
-            proxy=settings.connection.PROXY,
-            login=settings.person.LOGIN,
-            password=settings.person.PASSWORD,
+            proxy_data=proxy_data,
+            login=person.login,
+            password=person.password,
         )
         logger.debug("connect connection id = %s", id(connection))
         await connection.start()

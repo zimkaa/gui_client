@@ -8,7 +8,7 @@ from dependency_injector.wiring import inject
 from src.application.deps import MainContainer
 from src.config.game import urls
 from src.domain.pattern.person import compiled
-from src.use_cases.person.parameter import person_params
+from src.use_cases.person.parameter import PERSON_PARAMS
 
 
 if TYPE_CHECKING:
@@ -65,7 +65,7 @@ class Person:
     def _get_param_dict(self) -> dict:
         find_stats = compiled.find_stats.findall(self.info_page_text)
         prepared: list[str] = find_stats[0].split("],[")
-        param_dict = dict.fromkeys(person_params)
+        param_dict = dict.fromkeys(PERSON_PARAMS)
         for num, key in enumerate(param_dict.keys()):
             cleared_string = prepared[num + 1].replace("[", "").replace("]", "").replace(f"'{key}',", "")
             elements = cleared_string.split(",")

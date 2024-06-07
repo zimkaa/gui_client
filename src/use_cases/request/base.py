@@ -1,6 +1,18 @@
 from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    import aiohttp
+
+
+@dataclass
+class Proxy:
+    proxy: str | None = None
+    proxy_auth: aiohttp.BasicAuth | None = None
 
 
 class BaseConnection(ABC):
@@ -17,7 +29,7 @@ class BaseConnection(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_html(self, site_url: str, *, data: dict | None = None, log_response: bool = False) -> str:
+    async def get_html(self, site_url: str, *, params: dict | None = None, log_response: bool = False) -> str:
         raise NotImplementedError
 
     @abstractmethod

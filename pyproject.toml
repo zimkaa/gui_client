@@ -15,6 +15,7 @@ sentry-sdk = "^2.4.0"
 flet = "^0.22.1"
 aiohttp = "^3.9.5"
 dependency-injector = "^4.41.0"
+tenacity = "^8.3.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.7"
@@ -69,6 +70,8 @@ exclude = [
     "dist",
     "node_modules",
     "site-packages",
+    # project specific
+    "INFO/"
 ]
 
 [tool.ruff.lint]
@@ -101,7 +104,13 @@ quote-style = "double"
 [tool.mypy]
 cache_dir = "/tmp/mypy_cache"
 disable_error_code = "import-untyped"
-exclude = ["~/.pyenv/*", ".venv/", "alembic/"]
+exclude = [
+    "~/.pyenv/*",
+    ".venv/",
+    "alembic/",
+    # project specific
+    "INFO/*"
+]
 ignore_missing_imports = true
 python_version = "3.11"
 plugins = [
@@ -118,6 +127,21 @@ reportInvalidTypeForm = "none"
 [tool.vulture]
 exclude = [
     # project specific
+    "src/domain/item/actions.py",
+    "src/domain/item/base.py",
+    "src/domain/item/property.py",
+    "src/domain/item/name.py",
+    "src/domain/item/requirements.py",
+    "src/use_cases/game/game.py",
+    "src/domain/person/name.py",
+    "src/domain/pattern/inv/pattern.py",
+    "src/use_cases/game/base.py",
+    "src/infrastructure/utils/enums.py",
+    "src/infrastructure/flet_comp/root.py",
+    "src/infrastructure/flet_comp/component/login.py",
+    # OLD
+    "src/domain/pattern/inv/compiled.py",
+    "src/use_cases/item/base.py",
     "src/domain/value_object/base.py",
     "src/domain/value_object/classes.py",
     "src/use_cases/person/base.py",
@@ -158,4 +182,11 @@ sort_by_size = true
 ignore_names = [
     "model_config",  # pydantic
     # project specific
+    "scroll",
+    "adaptive",
+    "vertical_alignment",
+    "horizontal_alignment",
+    "on_route_change",
+    "on_view_pop",
+
 ]

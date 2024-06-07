@@ -9,12 +9,14 @@ __pycache__/
 # project
 INFO/
 cookies/
+store/
 
 ## files
 *.pyc
 *.log
 *.log.zip
 *.log.*
+test.py
 .pre-commit-config.yaml
 my_install.sh
 .DS_Store

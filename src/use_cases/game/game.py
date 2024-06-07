@@ -1,6 +1,6 @@
 from __future__ import annotations
 import asyncio
-import os
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 from src.config import logger
@@ -11,7 +11,11 @@ from src.infrastructure.request import my_ip
 from src.use_cases.person.base import Person
 
 
-class Game:
+if TYPE_CHECKING:
+    from src.use_cases.request.base import Proxy
+
+
+class User:
     def __init__(self) -> None:
         self.connection: Connection
 
@@ -22,65 +26,52 @@ class Game:
         self.person_list: list[Person] = []
         self.clan: str = ""
 
+        self.logger = logger
+
     async def init_connection(  # noqa: PLR0913
         self,
         ip: str,
         login: str,
         password: str,
+        proxy_data: Proxy | None = None,
         proxy: bool = False,  # noqa: FBT001, FBT002
-        proxy_url: str | None = None,
     ) -> None:
         if proxy:
-            assert proxy_url
-            real_ip = await my_ip(use_proxy=True)
-            os.environ.setdefault("HTTP_PROXY", proxy_url)
+            real_ip = await my_ip(user_proxy=proxy_data)
         else:
-            real_ip = await my_ip(use_proxy=False)
+            real_ip = await my_ip(user_proxy=None)
 
         if ip in real_ip:
             text = f"\n-------ip------- {real_ip} LOGIN {login}" * 5
-            logger.info(text)
+            self.logger.info(text)
             self.error = False
         else:
             text = f"{login} {ip=} not in real IP={real_ip}"
-            logger.error(text)
+            self.logger.error(text)
             self.error = True
 
         if not self.error:
-            try:
-                self.connection = Connection(
-                    proxy=proxy,
-                    login=login,
-                    password=password,
-                )
-                await self.connection.start()
-                self.online = True
-            except Exception as err:  # noqa: BLE001
-                logger.error("err=%s", err)
+            self.connection = Connection(
+                proxy_data=proxy_data,
+                login=login,
+                password=password,
+            )
+            await self.connection.start()
+            self.online = True
 
     async def close(self) -> None:
         await self.connection.close()
 
-    async def persons_info(self, names: list[str]) -> list[str]:
-        tasks = []
-        for name in names:
-            nick = name.encode("cp1251")
-            tasks.append(asyncio.create_task(self.get_info(nick)))
-            text = f"{name=}"
-            logger.error(text)
-
-        return await asyncio.gather(*tasks)
-
     async def get_person_on_cell(self) -> str:
         text = await self.connection.get_html("http://www.neverlands.ru/ch.php?lo=1&")
-        # logger.error(f"{text=}")  # noqa: ERA001
+        # self.logger.error(f"{text=}")  # noqa: ERA001
         # PATTERN_PERSONS_ON_CELL_GROUP = r"\"(.{1,33}):(.{1,33}):(\d{1,3}):\w{1,6}\.gif;(.{1,30});.{0,35}:(\d|.{1,10000}):(\d|.{1,10000}):(\d|.{1,10000}):(\d|.{1,10000}):\w{1,10}\.gif;.{1,30}\"[,|\)]"  # noqa: E501, ERA001
 
         count2 = person_om_cell_group.findall(text)
         string = ""
         persons = []
         for row in count2:
-            # logger.debug(f"{row=}")  # noqa: ERA001
+            # self.logger.debug(f"{row=}")  # noqa: ERA001
             name = row[1]
             level = row[2]
             row[3]
@@ -117,7 +108,7 @@ class Game:
         }
 
         # TODO: need do retry get  # noqa: TD003, FIX002, TD002
-        answer = await self.connection.get_html(site_url, data=data, log_response=True)
+        answer = await self.connection.get_html(site_url, params=data, log_response=True)
         self.clan = answer
         return answer
 
