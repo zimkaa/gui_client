@@ -14,10 +14,10 @@ from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import aiohttp
-from tenacity import retry
-from tenacity import stop_after_attempt
-from tenacity import wait_incrementing
 
+# from tenacity import retry  # noqa: ERA001
+# from tenacity import stop_after_attempt  # noqa: ERA001
+# from tenacity import wait_incrementing  # noqa: ERA001
 from src.config import logger
 from src.config import settings
 from src.config.game import connection
@@ -235,11 +235,11 @@ class Connection(BaseConnection):
         request_error_file_logger.error(all_text)
         request_error_file_logger.info("Delimiter")
 
-    @retry(
-        wait=wait_incrementing(start=0.5, increment=0.5, max=3),
-        stop=stop_after_attempt(1),
-        reraise=True,
-    )  # noqa: ERA001, RUF100
+    # @retry(
+    #     wait=wait_incrementing(start=0.5, increment=0.5, max=3),  # noqa: ERA001
+    #     stop=stop_after_attempt(1),  # noqa: ERA001
+    #     reraise=True,  # noqa: ERA001
+    # )  # noqa: ERA001, RUF100
     async def get_html(self, site_url: str, *, params: dict | None = None, log_response: bool = False) -> str:
         func = inspect.currentframe()
         assert func
@@ -294,11 +294,11 @@ class Connection(BaseConnection):
                 )
                 raise request.GetNewCodeError
 
-    @retry(
-        wait=wait_incrementing(start=0.5, increment=0.5, max=3),
-        stop=stop_after_attempt(1),
-        reraise=True,
-    )  # noqa: ERA001, RUF100
+    # @retry(
+    #     wait=wait_incrementing(start=0.5, increment=0.5, max=3),  # noqa: ERA001
+    #     stop=stop_after_attempt(1),  # noqa: ERA001
+    #     reraise=True,  # noqa: ERA001
+    # )  # noqa: ERA001, RUF100
     async def post_html(
         self,
         site_url: str,
