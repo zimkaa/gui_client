@@ -197,11 +197,39 @@ class Connection(BaseConnection):
         # await self.get_html(urls.URL_MAIN)  # noqa: ERA001
         # await self.get_html(urls.URL_PHARMACY)  # noqa: ERA001
 
-    def _write_all_debug_logs(self, text: str) -> None:
+    def _write_all_debug_logs(  # noqa: PLR0913
+        self,
+        *,
+        result,  # noqa: ANN001
+        func_name: str,
+        site_url: str,
+        log_response: bool,
+        params: dict | None = None,
+        data: dict | None = None,
+    ) -> None:
+        text = f"{self.login} {func_name} {site_url=} {params=} {data=} "
+        if log_response and settings.DEBUG:
+            text += f"\n{result=}"
         request_file_logger.debug(text)
 
-    def _write_error_logs(self, text: str, response: str | None = None) -> None:
-        response_text = f"{response}\n" if response else ""
+    async def _write_error_logs(  # noqa: PLR0913
+        self,
+        *,
+        answer,  # noqa: ANN001
+        func_name: str,
+        site_url: str,
+        params: dict | None = None,
+        data: dict | None = None,
+    ) -> None:
+        result = await answer.text()
+        text = f"{self.login} {func_name} {site_url=} \n{answer.status=} {params=} {data=} \n"
+
+        print_debug_text = ""
+        for key, value in answer.__dict__.items():
+            print_debug_text += f"{key}: {value}\n"
+        text += print_debug_text
+
+        response_text = f"{result}\n" if result else ""
         all_text = f"{text}\n{response_text}"
         request_file_logger.error(all_text)
         request_error_file_logger.error(all_text)
@@ -209,7 +237,7 @@ class Connection(BaseConnection):
 
     @retry(
         wait=wait_incrementing(start=0.5, increment=0.5, max=3),
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(1),
         reraise=True,
     )  # noqa: ERA001, RUF100
     async def get_html(self, site_url: str, *, params: dict | None = None, log_response: bool = False) -> str:
@@ -218,48 +246,57 @@ class Connection(BaseConnection):
 
         answer = await self._session.get(site_url, params=params, **self.proxy_kwargs)  # type: ignore[arg-type]
 
-        print_debug_text = ""
-        for key, value in answer.__dict__.items():
-            print_debug_text += f"{key}: {value}\n"
+        match answer.status:
+            case HTTPStatus.OK:
+                result = await answer.text()
+                self._write_all_debug_logs(
+                    result=result,
+                    func_name=func.f_code.co_name,
+                    params=params,
+                    site_url=site_url,
+                    log_response=log_response,
+                )
+                return result
 
-        if answer.status == HTTPStatus.OK:
-            result = await answer.text()
-            text = f"{self.login} {func.f_code.co_name} params={params} {site_url=}"
-            if log_response and settings.DEBUG:
-                text += f" {result=}"
-            self._write_all_debug_logs(text)
-            return result
+            case HTTPStatus.BAD_GATEWAY:
+                await self._write_error_logs(
+                    answer=answer,
+                    func_name=func.f_code.co_name,
+                    params=params,
+                    site_url=site_url,
+                )
+                raise request.GetCode502Error
 
-        if answer.status == HTTPStatus.BAD_GATEWAY:
-            text = f"{self.login} {func.f_code.co_name} {answer.status=}\n params={params} {site_url=}\n"
-            response = await answer.text()
-            text += print_debug_text
-            self._write_error_logs(text, response)
-            raise request.GetCode502Error
+            case HTTPStatus.GATEWAY_TIMEOUT:
+                await self._write_error_logs(
+                    answer=answer,
+                    func_name=func.f_code.co_name,
+                    params=params,
+                    site_url=site_url,
+                )
+                raise request.GetCode504Error
 
-        if answer.status == HTTPStatus.GATEWAY_TIMEOUT:
-            text = f"{self.login} {func.f_code.co_name} {answer.status=}\n params={params} {site_url=}\n"
-            response = await answer.text()
-            text += print_debug_text
-            self._write_error_logs(text, response)
-            raise request.GetCode504Error
+            case 546:
+                await self._write_error_logs(
+                    answer=answer,
+                    func_name=func.f_code.co_name,
+                    params=params,
+                    site_url=site_url,
+                )
+                raise request.GetCode546Error
 
-        if answer.status == 546:  # noqa: PLR2004
-            text = f"{self.login} {func.f_code.co_name} {answer.status=}\n params={params} {site_url=}\n"
-            response = await answer.text()
-            text += print_debug_text
-            self._write_error_logs(text, response)
-            raise request.GetCode546Error
-
-        text = f"{self.login} {func.f_code.co_name} error code: {answer.status=}"
-        response = await answer.text()
-        text += print_debug_text
-        self._write_error_logs(text, response)
-        raise request.GetNewCodeError(text)
+            case _:
+                await self._write_error_logs(
+                    answer=answer,
+                    func_name=func.f_code.co_name,
+                    params=params,
+                    site_url=site_url,
+                )
+                raise request.GetNewCodeError
 
     @retry(
         wait=wait_incrementing(start=0.5, increment=0.5, max=3),
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(1),
         reraise=True,
     )  # noqa: ERA001, RUF100
     async def post_html(
@@ -273,32 +310,34 @@ class Connection(BaseConnection):
         func = inspect.currentframe()
         assert func
 
-        if auth_headers:
-            answer = await self._session.post(site_url, data=data, headers=auth_headers, **self.proxy_kwargs)
-        else:
-            answer = await self._session.post(site_url, data=data, **self.proxy_kwargs)
+        answer = await self._session.post(site_url, data=data, headers=auth_headers, **self.proxy_kwargs)
 
-        print_debug_text = ""
-        for key, value in answer.__dict__.items():
-            print_debug_text += f"{key}: {value}\n"
+        match answer.status:
+            case HTTPStatus.OK:
+                result = await answer.text()
+                self._write_all_debug_logs(
+                    result=result,
+                    func_name=func.f_code.co_name,
+                    data=data,
+                    site_url=site_url,
+                    log_response=log_response,
+                )
+                return result
 
-        if answer.status == HTTPStatus.OK:
-            result = await answer.text()
-            text = f"{self.login} {func.f_code.co_name} {data=} {site_url=}"
-            if log_response and settings.DEBUG:
-                text += f" {result=}"
-            self._write_all_debug_logs(text)
-            return result
+            case HTTPStatus.BAD_GATEWAY:
+                await self._write_error_logs(
+                    answer=answer,
+                    func_name=func.f_code.co_name,
+                    data=data,
+                    site_url=site_url,
+                )
+                raise request.PostCode502Error
 
-        if answer.status == HTTPStatus.BAD_GATEWAY:
-            text = f"{self.login} {func.f_code.co_name} {answer.status=}\n {data=} {site_url=}\n"
-            response = await answer.text()
-            text += print_debug_text
-            self._write_error_logs(text, response)
-            raise request.PostCode502Error
-
-        text = f"{self.login} {func.f_code.co_name} error code: {answer.status=}"
-        response = await answer.text()
-        text += print_debug_text
-        self._write_error_logs(text, response)
-        raise request.PostNewCodeError(text)
+            case _:
+                await self._write_error_logs(
+                    answer=answer,
+                    func_name=func.f_code.co_name,
+                    data=data,
+                    site_url=site_url,
+                )
+                raise request.PostNewCodeError

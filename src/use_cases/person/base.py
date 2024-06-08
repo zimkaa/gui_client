@@ -2,10 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from urllib.parse import quote
 
-from dependency_injector.wiring import Provide
-from dependency_injector.wiring import inject
-
-from src.application.deps import MainContainer
 from src.config.game import urls
 from src.domain.pattern.person import compiled
 from src.use_cases.person.parameter import PERSON_PARAMS
@@ -16,9 +12,13 @@ if TYPE_CHECKING:
 
 
 class Person:
-    def __init__(self, nick: str) -> None:
-        self.nick = nick
-        self.login: bytes = nick.encode("cp1251")
+    def __init__(
+        self,
+        connection: BaseConnection,
+        login: str,
+    ) -> None:
+        self.connection = connection
+        self.login = login
         self.mp: float | None = None
         self.all_mp: float | None = None
         self.hp: float | None = None
@@ -93,8 +93,7 @@ class Person:
             return urls.URL_LOG + f"?fid={self.parameters[0][7]}"  # type: ignore[index]
         return None
 
-    @inject
-    async def update_info_person(self, connection: BaseConnection = Provide[MainContainer.connection]) -> Person:
-        answer = await connection.get_html(self.person_url_info)
+    async def update_info_person(self) -> Person:
+        answer = await self.connection.get_html(self.person_url_info)
         self._update_info(page_text=answer)
         return self

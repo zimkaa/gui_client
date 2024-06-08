@@ -82,6 +82,7 @@ ignore = [
     "TCH003",  # Move standard library import {} into a type-checking block
     "S101",  # using assert
     "ANN101",  # self annotation
+    "ANN102",  # cls annotation
     "EXE002",  # executable
     # project specific
 ]

@@ -80,7 +80,7 @@ class User:
             else:
                 nick = name
             persons.append(
-                asyncio.create_task(Person(self.connection, nick)._execute()),  # type: ignore[func-returns-value, call-arg, arg-type]  # noqa: SLF001
+                asyncio.create_task(Person(connection=self.connection, login=nick)._execute()),  # type: ignore[func-returns-value, call-arg, arg-type]  # noqa: SLF001
             )
 
         persons = await asyncio.gather(*persons)
