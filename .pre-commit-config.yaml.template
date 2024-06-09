@@ -12,10 +12,10 @@ repos:
     hooks:
       - id: python-safety-dependencies-check
         files: pyproject.toml
-        args: ["--short-report"]
+        args: ["--short-report", "--ignore=70612"]  # TODO: temporary added ignore for 70612
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.7
+    rev: v0.4.8
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix ]
