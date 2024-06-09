@@ -1,11 +1,15 @@
 from __future__ import annotations
 import asyncio
+import re
 from typing import TYPE_CHECKING
 from urllib.parse import quote
+
+import aiohttp
 
 from src.config import logger
 from src.config.game import constants
 from src.config.game import urls
+from src.domain.pattern.inv.pattern import FIND_USE_ITEM_MAGICREFORM
 from src.domain.pattern.location.compiled import person_om_cell_group
 from src.infrastructure.request import Connection
 from src.infrastructure.request import my_ip
@@ -20,6 +24,7 @@ class User:
     def __init__(self) -> None:
         self.connection: Connection
         self.login: str
+        self.last_page_text: str = ""
 
         self.online: bool = False
         self.error: bool = False
@@ -59,7 +64,7 @@ class User:
                 login=login,
                 password=password,
             )
-            await self.connection.start()
+            self.last_page_text = await self.connection.start()
             self.online = True
 
     async def close(self) -> None:
@@ -67,6 +72,7 @@ class User:
 
     async def get_person_on_cell(self) -> str:
         text = await self.connection.get_html(urls.URL_SELL_INFO)
+        self.last_page_text = text
         count2 = person_om_cell_group.findall(text)
         string = ""
         persons = []
@@ -107,6 +113,24 @@ class User:
         answer = await self.connection.get_html(urls.URL_MAIN, params=data)
         self.clan = answer
         return answer
+
+    async def use_buff(self, *, buff_name: str = "Превосходное Зелье Маны") -> None:
+        item_pattern = FIND_USE_ITEM_MAGICREFORM.format(name=buff_name)
+        self.finder_use_item = re.compile(item_pattern)
+        await self._use()
+
+    async def _use(self) -> None:
+        result = self.finder_use_item.finditer(self.last_page_text)
+        item = next(result).group(0)
+        (magicreuid, fornickname, _, vcode) = item.replace("'", "").split(",")
+        form_data = aiohttp.FormData(charset="windows-1251")  # cp1251
+        form_data.add_field("post_id", 46)
+        form_data.add_field("magicrestart", 1)
+        form_data.add_field("magicreuid", magicreuid)
+        form_data.add_field("vcode", vcode)
+        form_data.add_field("fornickname", fornickname)
+
+        self.last_page_text = await self.connection.post_html(urls.URL_MAIN, data=form_data)
 
     @property
     def status(self) -> str:

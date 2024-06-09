@@ -2,6 +2,7 @@ import aiohttp
 import flet as ft
 
 from src.config import logger
+from src.config import settings
 from src.infrastructure.flet_comp.element import login
 from src.use_cases.game.game import User
 from src.use_cases.request.base import Proxy
@@ -17,7 +18,7 @@ class LoginComponent(ft.View):
         super().__init__(
             "/",
             [
-                ft.AppBar(title=ft.Text("LogIn"), bgcolor=ft.colors.SURFACE_VARIANT),
+                self.top_bar,
                 self.login,
                 self.password,
                 self.label_proxy,
@@ -26,7 +27,7 @@ class LoginComponent(ft.View):
                 self.port,
                 self.pr_log,
                 self.pr_pass,
-                ft.ElevatedButton("Log in", on_click=self.log_in),
+                self.login_button,
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             vertical_alignment=ft.MainAxisAlignment.CENTER,
@@ -35,14 +36,16 @@ class LoginComponent(ft.View):
 
     def _create_login_elements(self) -> None:
         self.logger.debug("_create_login_elements")
-        self.login = login.LOGIN
-        self.password = login.PASSWORD
-        self.label_proxy = login.LABEL_PROXY
-        self.proxy = ft.Checkbox(value=True, on_change=self.checkbox_chang_visible)
-        self.ip = login.IP
-        self.port = login.PORT
-        self.pr_log = login.PR_LOG
-        self.pr_pass = login.PR_PASS
+        self.login = login.LoginElement(value=settings.person.LOGIN)
+        self.password = login.PasswordElement(value=settings.person.PASSWORD)
+        self.label_proxy = login.LabelProxy()
+        self.proxy = login.ProxyCheckbox(on_change=self.checkbox_chang_visible)
+        self.ip = login.IpElement(value=settings.connection.PROXY_IP)
+        self.port = login.PortElement(value=settings.connection.PROXY_PORT)
+        self.pr_log = login.ProxyLoginElement(value=settings.connection.PROXY_LOG)
+        self.pr_pass = login.ProxyPassElement(value=settings.connection.PROXY_PASS)
+        self.top_bar = login.TopBar()
+        self.login_button = login.LogInButton(on_click=self.log_in)
 
     async def checkbox_chang_visible(self, e) -> None:  # noqa: ANN001, ARG002
         self.logger.debug("checkbox_chang_visible")

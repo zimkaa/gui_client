@@ -28,3 +28,9 @@ PROPERTY_AND_REQUIREMENTS: Final[str] = r"(?<=font class=weaponch).*?(?=img src=
 EVERY_TEXT_IN_TAG_BRACKETS: Final[str] = r">([^<>]+)<"
 
 EVERY_ACTION: Final[str] = r"<input[^>]*onclick=\"([^\"]+)\"[^>]*value=\"([^\"]+)\""
+
+FIND_USE_ITEM_PART1 = r"(?<=get_id=43&act="
+
+FIND_USE_ITEM_PART2 = "&uid=).+?' }"
+
+FIND_USE_ITEM_MAGICREFORM = r"(?<=magicreform\(')\S+{name}\S+(?='\)\" value=\"Использовать)"

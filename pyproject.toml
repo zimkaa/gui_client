@@ -85,6 +85,8 @@ ignore = [
     "ANN102",  # cls annotation
     "EXE002",  # executable
     # project specific
+    "ANN002",  # args annotation
+    "ANN003",  # kwargs annotation
 ]
 exclude = []
 

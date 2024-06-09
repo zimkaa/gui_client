@@ -16,15 +16,16 @@ class MainComponent(ft.View):
         super().__init__(
             "/main",
             [
-                ft.AppBar(title=ft.Text("LogOut"), bgcolor=ft.colors.SURFACE_VARIANT),
-                ft.ElevatedButton("LogOut Button", on_click=lambda _: page.go("/")),
+                self.button_logout,
                 self.greetings_text,
-                ft.Text(f"Status={game.status}"),
-                ft.ElevatedButton("see clan", on_click=self.see_clan),
+                self.status,
+                self.button_clan_item,
                 # Text(f"person_on_cell\n{person_on_cell[0]}", selectable=True),  # noqa: ERA001
                 # Persons(),  # noqa: ERA001
                 # persons,
                 # dd,
+                self.button_buff,
+                self.use_status,
                 self.potion_text,
             ],
             scroll=ft.ScrollMode.ADAPTIVE,
@@ -32,13 +33,25 @@ class MainComponent(ft.View):
 
     def _create_main_elements(self) -> None:
         self.logger.debug("_create_main_elements")
-        self.potion_text = main.POTION_TEXT
-        self.greetings_text = main.GreetingText(self.game.login)
+        self.potion_text = main.PotionText()
+        self.greetings_text = main.GreetingText(login=self.game.login)
+        self.button_buff = main.BuffButton(on_click=self.use_default_buff)
+        self.button_clan_item = main.ClanItemsButton(on_click=self.see_clan)
+        self.status = main.Status(status=self.game.status)
+        self.use_status = main.UseStatus()
 
-    # async def logout(self, e) -> None:
-    #     self.logger.debug("logout")  # noqa: ERA001
-    #     await self.game.close()  # noqa: ERA001
-    #     await self.page.go_async("/")  # noqa: ERA001
+        self.button_logout = main.LogOutButton(on_click=self._logout)
+
+    async def use_default_buff(self, e) -> None:  # noqa: ANN001, ARG002
+        self.logger.debug("use_default_buff")
+        await self.game.use_buff(buff_name="Превосходное Зелье Жизни")
+        self.use_status.value = "Buff used"
+        await self.use_status.update_async()
+
+    async def _logout(self, e) -> None:  # noqa: ANN001, ARG002
+        self.logger.debug("logout")
+        await self.game.close()
+        await self.page.go_async("/")
 
     async def see_clan(self, e) -> None:  # noqa: ANN001, ARG002
         self.logger.debug("see_clan")

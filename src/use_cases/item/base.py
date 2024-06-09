@@ -23,7 +23,7 @@ class IdenticalItemCollection:
         return cls.__instance
 
     def __init__(self) -> None:
-        self.items: dict[str, int] = defaultdict(int)
+        self.items: dict[str, list[NeverItem]] = defaultdict(list[NeverItem])
 
     def __len__(self) -> int:
         return len(self.items)
@@ -31,11 +31,18 @@ class IdenticalItemCollection:
     def __iter__(self) -> Iterator[str]:
         return iter(self.items)
 
-    def add_item(self, name: str) -> None:
-        self.items[name] += 1
+    def add_item(self, item: NeverItem) -> None:
+        self.items[item.name].append(item)
 
-    def get_item(self, name: str) -> int | None:
+    def get_item(self, name: str) -> list[NeverItem] | None:
         return self.items.get(name)
+
+    def get_items_count(self, name: str) -> int:
+        items = self.items.get(name)
+        if not items:
+            return 0
+
+        return len(items)
 
     def __repr__(self) -> str:
         sorted_items = sorted(self.items.items(), key=lambda x: x[1], reverse=True)

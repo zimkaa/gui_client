@@ -77,10 +77,10 @@ class Connection(BaseConnection):
 
         self._session: aiohttp.ClientSession
 
-    async def start(self) -> None:
+    async def start(self) -> str:
         logger.info("\n\nConnection start object id = %s \n\n", id(self))
         self._set_session()
-        await self._log_in()
+        return await self._log_in()
 
     async def reconnect(self) -> None:
         logger.debug("Connection reconnect")
@@ -196,7 +196,7 @@ class Connection(BaseConnection):
         self._save_cookies()
         return await self.get_html(urls.URL_MAIN)
 
-    async def _log_in(self) -> None:
+    async def _log_in(self) -> str:
         logger.debug("_log_in")
         if self._is_valid_cookies():
             self._session.cookie_jar.update_cookies(self._cookies.get(("neverlands.ru", "/")))  # type: ignore[arg-type]
@@ -217,8 +217,7 @@ class Connection(BaseConnection):
             logger.debug("Updated cookies")
 
         self._save_cookies()
-        # await self.get_html(urls.URL_MAIN)  # noqa: ERA001
-        # await self.get_html(urls.URL_PHARMACY)  # noqa: ERA001
+        return result
 
     def _write_all_debug_logs(  # noqa: PLR0913
         self,
@@ -228,7 +227,7 @@ class Connection(BaseConnection):
         site_url: str,
         log_response: bool,
         params: dict | None = None,
-        data: dict | None = None,
+        data: aiohttp.FormData | None = None,
     ) -> None:
         text = f"{self.login} {func_name} {site_url=} {params=} {data=} "
         if log_response and settings.DEBUG:
@@ -242,7 +241,7 @@ class Connection(BaseConnection):
         func_name: str,
         site_url: str,
         params: dict | None = None,
-        data: dict | None = None,
+        data: aiohttp.FormData | None = None,
     ) -> None:
         result = await answer.text()
         text = f"{self.login} {func_name} {site_url=} \n{answer.status=} {params=} {data=} \n"
@@ -331,7 +330,7 @@ class Connection(BaseConnection):
         self,
         site_url: str,
         *,
-        data: dict | None = None,
+        data: aiohttp.FormData | None = None,
         log_response: bool = False,
         auth_headers: dict[str, str] | None = None,
     ) -> str:
@@ -341,7 +340,7 @@ class Connection(BaseConnection):
         answer = await self._session.post(
             site_url,
             data=data,
-            headers=auth_headers,
+            headers=auth_headers or {"Content-Type": "application/x-www-form-urlencoded"},
             timeout=aiohttp.ClientTimeout(total=15),
             **self.proxy_kwargs,
         )

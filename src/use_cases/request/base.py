@@ -17,7 +17,7 @@ class Proxy:
 
 class BaseConnection(ABC):
     @abstractmethod
-    async def start(self) -> None:
+    async def start(self) -> str:
         raise NotImplementedError
 
     @abstractmethod
@@ -37,7 +37,7 @@ class BaseConnection(ABC):
         self,
         site_url: str,
         *,
-        data: dict | None = None,
+        data: aiohttp.FormData | None = None,
         log_response: bool = False,
         auth_headers: dict | None = None,
     ) -> str:
