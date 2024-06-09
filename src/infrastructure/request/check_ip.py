@@ -16,7 +16,7 @@ async def my_ip(*, user_proxy: Proxy | None = None) -> str:
 
     if not user_proxy:
         user_proxy = Proxy(proxy=None, proxy_auth=None)
-    logger.error("user_proxy=%s", user_proxy)
+    logger.debug("user_proxy=%s", user_proxy)
     async with aiohttp.ClientSession(headers=constants.HEADER) as session:  # noqa: SIM117
         async with session.get(random_site, proxy=user_proxy.proxy, proxy_auth=user_proxy.proxy_auth) as answer:
             text = await answer.text()

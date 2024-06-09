@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 from src.config import logger
+from src.config.game import constants
 from src.config.game import urls
 from src.domain.pattern.location.compiled import person_om_cell_group
 from src.infrastructure.request import Connection
@@ -90,8 +91,8 @@ class User:
         self.person_on_cell = string
         return string
 
-    async def get_info(self, nick: bytes) -> str:
-        name = quote(nick)
+    async def get_info(self, nick: str) -> str:
+        name = quote(nick, encoding=constants.ENCODING)
         # TODO: need do retry get  # noqa: FIX002, TD002, TD003
         return await self.connection.get_html(urls.URL_PLAYER_INFO.format(name=name))
 

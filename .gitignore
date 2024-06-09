@@ -17,6 +17,7 @@ store/
 *.log.zip
 *.log.*
 test.py
+test2.py
 .pre-commit-config.yaml
 my_install.sh
 .DS_Store

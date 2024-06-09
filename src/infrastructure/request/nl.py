@@ -23,6 +23,7 @@ from src.config import settings
 from src.config.game import connection
 from src.config.game import constants
 from src.config.game import urls
+from src.infrastructure.errors import exception
 from src.infrastructure.errors import request
 from src.use_cases.request.base import BaseConnection
 
@@ -87,44 +88,63 @@ class Connection(BaseConnection):
 
     def _set_session(self) -> None:
         logger.debug("_set_session")
-        self._session = aiohttp.ClientSession(
-            headers=constants.HEADER,
-            timeout=aiohttp.ClientTimeout(total=10),
-        )
+        self._session = aiohttp.ClientSession(headers=constants.HEADER)
 
     async def close(self) -> None:
         logger.critical("Connection close")
         await self._session.close()
 
+    def _read_txt_cookie_file(self, file_path: Path) -> None:
+        logger.debug("_read_txt_cookie_file %s", file_path)
+        with file_path.open() as f:
+            info = f.read()
+
+        if info:
+            self._cookies[("neverlands.ru", "/")] = SimpleCookie(info)
+
+    def _read_binary_cookie_file(self, file_path: Path) -> None:
+        logger.debug("_read_cookie_file %s", file_path)
+        with file_path.open(mode="rb") as f:
+            self._cookies = pickle.load(f)  # noqa: S301
+
     def _is_valid_cookies(self) -> bool:
         logger.debug("_is_valid_cookies")
         if not os.listdir(COOKIE_FOLDER):
-            logger.error("_is_valid_cookies False NO FILE COOKIE_FOLDER=%s", COOKIE_FOLDER)
-            return False
+            raise exception.NoCookiesFolderError
 
         dt = datetime.now(tz=UTC)
         dt_without_microseconds = dt.replace(microsecond=0)
 
-        try:
-            with Path(self.cookies_txt_file_path).open() as f:
-                info = f.read()
-            self._cookies[("neverlands.ru", "/")] = SimpleCookie(info)
-        except FileNotFoundError:
-            logger.warning("_is_valid_cookies False NO FILE %s", self.cookies_txt_file_path)
-            with Path(self.cookies_binary_file_path).open(mode="rb") as f:
-                self._cookies = pickle.load(f)  # noqa: S301
+        file_path = Path(self.cookies_txt_file_path)
+        if file_path.exists():
+            self._read_txt_cookie_file(file_path)
+
+        if not self._cookies:
+            binary_file_path = Path(self.cookies_binary_file_path)
+            logger.debug("_is_valid_cookies False NO TEXT FILE %s", self.cookies_txt_file_path)
+            if binary_file_path.exists():
+                self._read_binary_cookie_file(binary_file_path)
+            else:
+                logger.debug("_is_valid_cookies False NO BINARY FILE %s", self.cookies_binary_file_path)
+                return False
+
+        if not self._cookies:
+            logger.debug("_is_valid_cookies self._cookies NO COOKIES")
+            return False
 
         user = self._cookies.get(("neverlands.ru", "/")).get("NeverNick").value  # type: ignore[union-attr]
         login = quote(self.login, encoding=constants.ENCODING)
+        login = login.replace("~", "%7E")
+
         if user != login:
-            logger.error("_is_valid_cookies False Cookie another person user-%s != login-%s", user, login)
+            logger.critical("_is_valid_cookies False Cookie another person user-%s != login-%s", user, login)
             return False
 
         end_timestamp = self._cookies.get(("neverlands.ru", "/")).get("NeverExpi").value  # type: ignore[union-attr]
         if int(dt_without_microseconds.timestamp()) >= int(end_timestamp):
-            logger.error("_is_valid_cookies False int(dt_without_microseconds.timestamp()) >= int(end_timestamp)")
-            logger.error("%s", int(dt_without_microseconds.timestamp()) >= int(end_timestamp))
-            logger.error("%s %s", int(dt_without_microseconds.timestamp()), int(end_timestamp))
+            logger.debug("_is_valid_cookies False int(dt_without_microseconds.timestamp()) >= int(end_timestamp)")
+            logger.debug("%s", int(dt_without_microseconds.timestamp()) >= int(end_timestamp))
+            logger.debug("%s %s", int(dt_without_microseconds.timestamp()), int(end_timestamp))
             return False
 
         logger.debug("_is_valid_cookies True")
@@ -133,11 +153,11 @@ class Connection(BaseConnection):
     def _is_logged_in(self, result: str) -> bool:
         logger.debug("_is_logged_in")
         if connection.LOGIN_TEXT in result:
-            logger.error("NOT LOGGED cookies cleared")
+            logger.warning("NOT LOGGED cookies cleared")
             self._session.cookie_jar.clear()
             return False
         if connection.RELOGIN_TEXT in result:
-            logger.error("NEED RELOGIN cookies cleared")
+            logger.warning("NEED RELOGIN cookies cleared")
             self._session.cookie_jar.clear()
             return False
         logger.debug("_is_logged_in true")
@@ -149,8 +169,11 @@ class Connection(BaseConnection):
         for cookie in self._session.cookie_jar:
             key = cookie.key
             value = cookie.value
-            lines.append(f"{key}={value}")
+            tine = f"{key}={value}"
+            lines.append(tine)
+
         cookie = "; ".join(lines)  # type: ignore[assignment]
+        logger.debug("cookie %s", cookie)
         with Path(self.cookies_txt_file_path).open("w") as f:
             f.write(cookie)  # type: ignore[arg-type]
 
@@ -244,7 +267,12 @@ class Connection(BaseConnection):
         func = inspect.currentframe()
         assert func
 
-        answer = await self._session.get(site_url, params=params, **self.proxy_kwargs)  # type: ignore[arg-type]
+        answer = await self._session.get(
+            site_url,
+            params=params,
+            timeout=aiohttp.ClientTimeout(total=15),
+            **self.proxy_kwargs,  # type: ignore[arg-type]
+        )
 
         match answer.status:
             case HTTPStatus.OK:
@@ -310,7 +338,13 @@ class Connection(BaseConnection):
         func = inspect.currentframe()
         assert func
 
-        answer = await self._session.post(site_url, data=data, headers=auth_headers, **self.proxy_kwargs)
+        answer = await self._session.post(
+            site_url,
+            data=data,
+            headers=auth_headers,
+            timeout=aiohttp.ClientTimeout(total=15),
+            **self.proxy_kwargs,
+        )
 
         match answer.status:
             case HTTPStatus.OK:
