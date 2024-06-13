@@ -4,8 +4,6 @@ from collections import defaultdict
 from collections.abc import Iterator
 from pathlib import Path
 
-from typing_extensions import Self
-
 from src.config import logger
 from src.domain.item.actions import ActionVariants
 from src.domain.item.base import NeverItem
@@ -15,13 +13,6 @@ from src.domain.pattern.inv import compiled
 
 
 class IdenticalItemCollection:
-    __instance: Self | None = None
-
-    def __new__(cls):  # noqa: ANN204
-        if cls.__instance is None:
-            cls.__instance = super().__new__(cls)
-        return cls.__instance
-
     def __init__(self) -> None:
         self.items: dict[str, list[NeverItem]] = defaultdict(list[NeverItem])
 
@@ -112,8 +103,12 @@ def get_action_elements(text: str) -> dict[ActionVariants, str] | None:
     return item
 
 
-def get_items(search_result: list[str]) -> tuple[list[NeverItem], IdenticalItemCollection]:
-    identical_item_collection = IdenticalItemCollection()
+def get_items(
+    search_result: list[str],
+    identical_item_collection: IdenticalItemCollection | None = None,
+) -> tuple[list[NeverItem], IdenticalItemCollection]:
+    if identical_item_collection is None:
+        identical_item_collection = IdenticalItemCollection()
     items: list[NeverItem] = []
     for i, item in enumerate(search_result):
         text_matches = compiled.finder_item_name.findall(item)
@@ -147,6 +142,7 @@ def get_items(search_result: list[str]) -> tuple[list[NeverItem], IdenticalItemC
                 actions=actions_elements,
             ),
         )
+
     return items, identical_item_collection
 
 

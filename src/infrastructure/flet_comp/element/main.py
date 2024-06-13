@@ -82,3 +82,35 @@ class Status(ft.Text):
 class UseStatus(ft.Text):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+
+
+class GoToBaitButton(ft.ElevatedButton):
+    def __init__(self, on_click: Callable[[Any], Coroutine[Any, Any, None]], **kwargs) -> None:
+        if "text" not in kwargs:
+            kwargs["text"] = "Start Bait"
+
+        super().__init__(on_click=on_click, **kwargs)
+
+
+class BaitStatus(ft.Text):
+    def __init__(self, **kwargs) -> None:
+        if "value" not in kwargs:
+            kwargs["value"] = "Bait Not started"
+
+        super().__init__(**kwargs)
+
+
+class StartABButton(ft.ElevatedButton):
+    def __init__(self, on_click: Callable[[Any], Coroutine[Any, Any, None]], **kwargs) -> None:
+        if "text" not in kwargs:
+            kwargs["text"] = "Start AB"
+
+        super().__init__(on_click=on_click, **kwargs)
+
+
+class ABStatus(ft.Text):
+    def __init__(self, **kwargs) -> None:
+        if "value" not in kwargs:
+            kwargs["value"] = "AB Not started"
+
+        super().__init__(**kwargs)

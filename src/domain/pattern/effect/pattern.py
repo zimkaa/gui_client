@@ -10,3 +10,10 @@ PATTERN_COUNT: Final[str] = r"(?<= \(x)\d{1,2}(?=\))"
 PATTERN_PART_TIME: Final[str] = r"\d{2}"
 
 PATTERN_EFFECT_NAME: Final[str] = r".+(?= \(x)"
+
+
+FIND_EFFECT_NAME = r">([^<|>]+)</"
+
+name_count_time = r">([^<|>]+)</.+?\(x([^ ]+)\) \(еще ([^<>]+)\)"
+
+FIND_NAME_COUNT_TIME = r">([^<|>]+)</.+?\(x([^ ]+)\) \(еще ([^<>]+)\)'"

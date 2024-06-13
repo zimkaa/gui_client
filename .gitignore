@@ -10,6 +10,7 @@ __pycache__/
 INFO/
 cookies/
 store/
+logs/
 
 ## files
 *.pyc

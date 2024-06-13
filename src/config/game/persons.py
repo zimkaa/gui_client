@@ -10,3 +10,5 @@ class PersonsNick(StrEnum):
     FIZRA = "Физра"
     GAMER_ATI = "gamer ATI"
     LEGALAS = "ЛЕГАЛАС"
+    FALGA = "Folmagaut"
+    KACTATI = "kactaTi"

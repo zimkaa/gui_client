@@ -12,3 +12,5 @@ finder_eff_count = re.compile(pattern.PATTERN_COUNT)
 finder_eff_time = re.compile(pattern.PATTERN_PART_TIME)
 
 finder_eff_name = re.compile(pattern.PATTERN_EFFECT_NAME)
+
+finder_name_count_time = re.compile(pattern.FIND_NAME_COUNT_TIME)

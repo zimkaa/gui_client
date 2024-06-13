@@ -1,0 +1,35 @@
+from enum import StrEnum
+
+
+RESTORATION_NAME = "Эликсир Восстановления"
+CHAMPAGNE_BOTTLE_NAME = "Бутылка Шампанского"
+INSTANT_HEALING_NAME = "Эликсир Мгновенного Исцеления"
+BOT_BAIT_NAME = "Приманка Для Ботов"
+BLISS_NAME = "Эликсир Блаженства"
+POTION_BLOODTHIRSTY_NAME = "Зелье Кровожадности"
+
+SWIFTNESS_NAME = "Эликсир Быстроты"
+ILANAS_GIFT_NAME = "Дар Иланы"
+SNOWDROP_NAME = "Эликсир из Подснежника"
+YOUTH_NAME = "Молодильное яблочко"
+PLANAR_SUMMONING_NAME = "Планарный призыв!!!"
+FAROS_WINE_NAME = "Фаросское Вино"
+FIRE_ENHANCEMENT_NAME = "Усиление огня"
+IRIS_BOWL_NAME = "Чаша Айрис"
+
+
+class Elixir(StrEnum):
+    RESTORATION = RESTORATION_NAME
+    BOT_BAIT = BOT_BAIT_NAME
+    CHAMPAGNE_BOTTLE = CHAMPAGNE_BOTTLE_NAME
+    INSTANT_HEALING = INSTANT_HEALING_NAME
+    POTION_BLOODTHIRSTY = POTION_BLOODTHIRSTY_NAME
+    SWIFTNESS = SWIFTNESS_NAME
+    BLISS = BLISS_NAME
+    ILANAS_GIFT = ILANAS_GIFT_NAME
+    SNOWDROP = SNOWDROP_NAME
+    YOUTH = YOUTH_NAME
+    PLANAR_SUMMONING = PLANAR_SUMMONING_NAME
+    FAROS_WINE = FAROS_WINE_NAME
+    FIRE_ENHANCEMENT = FIRE_ENHANCEMENT_NAME
+    IRIS_BOWL = IRIS_BOWL_NAME

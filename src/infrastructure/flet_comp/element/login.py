@@ -4,6 +4,33 @@ from typing import Any
 
 import flet as ft
 
+from src.domain.value_object.classes import PersonType
+
+
+class MagOrWarrior(ft.Dropdown):
+    def __init__(self, **kwargs) -> None:
+        if "options" not in kwargs:
+            kwargs["options"] = [
+                ft.dropdown.Option(PersonType.MAG.name),
+                ft.dropdown.Option(PersonType.WARRIOR.name),
+            ]
+
+        if "width" not in kwargs:
+            kwargs["width"] = 200
+
+        if "value" not in kwargs:
+            kwargs["value"] = PersonType.MAG.name
+
+        super().__init__(**kwargs)
+
+
+class TestText(ft.Text):
+    def __init__(self, **kwargs) -> None:
+        if "selectable" not in kwargs:
+            kwargs["selectable"] = True
+
+        super().__init__(**kwargs)
+
 
 class LogInText(ft.Text):
     def __init__(self, **kwargs) -> None:

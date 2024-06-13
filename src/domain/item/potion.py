@@ -1,0 +1,36 @@
+from enum import StrEnum
+
+
+ROUGH_SKIN_NAME = "Зелье Загрубелой Кожи"
+MOBILITY_NAME = "Зелье Подвижности"
+IMMUNITY_NAME = "Зелье Иммунитета"
+EXCELLENT_SHELL_NAME = "Превосходное Зелье Панциря"
+SHELL_NAME = "Зелье Панциря"
+EXCELLENT_BARDS_NAME = "Превосходное Зелье Колкости"
+BARDS_NAME = "Зелье Колкости"
+EXCELLENT_LIFE_NAME = "Превосходное Зелье Жизни"
+LIFE_NAME = "Зелье Жизни"
+EXCELLENT_AGILE_STRIKES_NAME = "Превосходное Зелье Ловких Ударов"
+AGILE_STRIKES_NAME = "Зелье Ловких Ударов"
+
+
+equivalent_potion_dict = {
+    EXCELLENT_SHELL_NAME: SHELL_NAME,
+    EXCELLENT_BARDS_NAME: BARDS_NAME,
+    EXCELLENT_LIFE_NAME: LIFE_NAME,
+    EXCELLENT_AGILE_STRIKES_NAME: AGILE_STRIKES_NAME,
+}
+
+
+class Potion(StrEnum):
+    EXCELLENT_SHELL = EXCELLENT_SHELL_NAME
+    SHELL = SHELL_NAME
+    EXCELLENT_BARDS = EXCELLENT_BARDS_NAME
+    BARDS = BARDS_NAME
+    IMMUNITY = IMMUNITY_NAME
+    LIFE = LIFE_NAME
+    EXCELLENT_LIFE = EXCELLENT_LIFE_NAME
+    AGILE_STRIKES = AGILE_STRIKES_NAME
+    EXCELLENT_AGILE_STRIKES = EXCELLENT_AGILE_STRIKES_NAME
+    MOBILITY = MOBILITY_NAME
+    ROUGH_SKIN = ROUGH_SKIN_NAME

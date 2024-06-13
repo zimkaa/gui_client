@@ -21,6 +21,7 @@ class LoginComponent(ft.View):
                 self.top_bar,
                 self.login,
                 self.password,
+                self.mag_or_warrior,
                 self.label_proxy,
                 self.proxy,
                 self.ip,
@@ -28,11 +29,16 @@ class LoginComponent(ft.View):
                 self.pr_log,
                 self.pr_pass,
                 self.login_button,
+                self.test,
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             vertical_alignment=ft.MainAxisAlignment.CENTER,
             scroll=ft.ScrollMode.ADAPTIVE,
         )
+
+    async def dropdown_changed(self, e) -> None:  # noqa: ANN001, ARG002
+        self.test.value = f"Dropdown changed to {type(self.mag_or_warrior.value)} {self.mag_or_warrior.value}"
+        await self.test.update_async()
 
     def _create_login_elements(self) -> None:
         self.logger.debug("_create_login_elements")
@@ -46,6 +52,8 @@ class LoginComponent(ft.View):
         self.pr_pass = login.ProxyPassElement(value=settings.connection.PROXY_PASS)
         self.top_bar = login.TopBar()
         self.login_button = login.LogInButton(on_click=self.log_in)
+        self.mag_or_warrior = login.MagOrWarrior(on_change=self.dropdown_changed)
+        self.test = login.TestText(visible=True)
 
     async def checkbox_chang_visible(self, e) -> None:  # noqa: ANN001, ARG002
         self.logger.debug("checkbox_chang_visible")
@@ -78,6 +86,7 @@ class LoginComponent(ft.View):
             proxy=self.proxy.value,
             proxy_data=proxy_data,
             ip=self.ip.value,
+            mag_or_warrior=self.mag_or_warrior.value,
         )
         self._clear_values()
         await self.page.update_async()

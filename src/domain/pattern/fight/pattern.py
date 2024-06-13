@@ -18,3 +18,9 @@ PATTERN_OFF: Final[str] = r"(?<=off = )\d+(?=;)"
 PATTERN_LIVES_G1: Final[str] = r"(?<=lives_g1 = \[).+(?=];)|(?<=lives_g1 = \[).+\n.+(?=];)"
 
 PATTERN_LIVES_G2: Final[str] = r"(?<=lives_g2 = \[).+(?=];)|(?<=lives_g2 = \[).+\n.+(?=];)"
+
+FIND_LIVES_G2: Final[str] = r"(?<=lives_g2 = \[).+(?=];)|(?<=lives_g2 = \[).+\n.+(?=];)"
+
+FIND_FIGHT_VARIABLES_PART1: Final[str] = r"(?<="
+
+FIND_FIGHT_VARIABLES_PART2: Final[str] = r" = \[).+(?=];)"

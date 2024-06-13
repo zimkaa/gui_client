@@ -18,7 +18,12 @@ async def my_ip(*, user_proxy: Proxy | None = None) -> str:
         user_proxy = Proxy(proxy=None, proxy_auth=None)
     logger.debug("user_proxy=%s", user_proxy)
     async with aiohttp.ClientSession(headers=constants.HEADER) as session:  # noqa: SIM117
-        async with session.get(random_site, proxy=user_proxy.proxy, proxy_auth=user_proxy.proxy_auth) as answer:
+        async with session.get(
+            random_site,
+            proxy=user_proxy.proxy,
+            proxy_auth=user_proxy.proxy_auth,
+            timeout=aiohttp.ClientTimeout(total=2),
+        ) as answer:
             text = await answer.text()
 
     if answer.status != HTTPStatus.OK:

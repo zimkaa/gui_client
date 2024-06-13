@@ -28,7 +28,7 @@ async def tg_post_request(session: aiohttp.ClientSession, text: str, chat_id: st
         "chat_id": chat_id,
         "text": text,
     }
-    async with session.get(TG_SEND_REQUEST, data=data) as answer:
+    async with session.get(TG_SEND_REQUEST, data=data, timeout=aiohttp.ClientTimeout(total=1)) as answer:
         pass
     logger.debug("chat_id = %s", chat_id)
     if answer.status != HTTPStatus.OK:

@@ -2,6 +2,8 @@ from enum import Enum
 from enum import StrEnum
 from enum import auto
 
+from src.infrastructure.utils.enums import CaseInsensitiveEnum
+
 
 class PersonRole(Enum):
     SLAVE = auto()
@@ -9,7 +11,7 @@ class PersonRole(Enum):
     SOLO = auto()
 
 
-class PersonType(Enum):
+class PersonType(CaseInsensitiveEnum):
     WARRIOR = auto()
     MAG = auto()
 
