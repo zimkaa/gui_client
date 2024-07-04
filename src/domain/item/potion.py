@@ -12,6 +12,8 @@ EXCELLENT_LIFE_NAME = "Превосходное Зелье Жизни"
 LIFE_NAME = "Зелье Жизни"
 EXCELLENT_AGILE_STRIKES_NAME = "Превосходное Зелье Ловких Ударов"
 AGILE_STRIKES_NAME = "Зелье Ловких Ударов"
+EXCELLENT_MOUNTAIN_MAN_NAME = "Превосходное Зелье Человек-Гора"
+MOUNTAIN_MAN_NAME = "Зелье Человек-Гора"
 
 
 equivalent_potion_dict = {
@@ -19,6 +21,7 @@ equivalent_potion_dict = {
     EXCELLENT_BARDS_NAME: BARDS_NAME,
     EXCELLENT_LIFE_NAME: LIFE_NAME,
     EXCELLENT_AGILE_STRIKES_NAME: AGILE_STRIKES_NAME,
+    EXCELLENT_MOUNTAIN_MAN_NAME: MOUNTAIN_MAN_NAME,
 }
 
 
@@ -34,3 +37,5 @@ class Potion(StrEnum):
     EXCELLENT_AGILE_STRIKES = EXCELLENT_AGILE_STRIKES_NAME
     MOBILITY = MOBILITY_NAME
     ROUGH_SKIN = ROUGH_SKIN_NAME
+    EXCELLENT_MOUNTAIN_MAN = EXCELLENT_MOUNTAIN_MAN_NAME
+    MOUNTAIN_MAN = MOUNTAIN_MAN_NAME

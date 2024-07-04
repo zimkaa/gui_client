@@ -135,6 +135,7 @@ class Connection(BaseConnection):
         user = self._cookies.get(("neverlands.ru", "/")).get("NeverNick").value  # type: ignore[union-attr]
         login = quote(self.login, encoding=constants.ENCODING)
         login = login.replace("~", "%7E")
+        login = login.replace("%20", "+")
 
         if user != login:
             logger.critical("_is_valid_cookies False Cookie another person user-%s != login-%s", user, login)
@@ -265,8 +266,8 @@ class Connection(BaseConnection):
         request_error_file_logger.info("Delimiter")
 
     @retry(
-        wait=wait_incrementing(start=0.5, increment=0.5, max=3),
-        stop=stop_after_attempt(2),
+        wait=wait_incrementing(start=1, increment=1, max=3),
+        stop=stop_after_attempt(3),
         reraise=True,
     )  # noqa: ERA001, RUF100
     async def get_html(self, site_url: str, *, params: dict | None = None, log_response: bool = False) -> str:
@@ -329,15 +330,16 @@ class Connection(BaseConnection):
                 raise request.GetNewCodeError
 
     @retry(
-        wait=wait_incrementing(start=0.5, increment=0.5, max=3),
-        stop=stop_after_attempt(2),
+        wait=wait_incrementing(start=1, increment=1, max=3),
+        stop=stop_after_attempt(3),
         reraise=True,
     )  # noqa: ERA001, RUF100
-    async def post_html(
+    async def post_html(  # noqa: PLR0913
         self,
         site_url: str,
         *,
         data: aiohttp.FormData | None = None,
+        params: dict | None = None,
         log_response: bool = False,
         auth_headers: dict[str, str] | None = None,
     ) -> str:
@@ -346,6 +348,7 @@ class Connection(BaseConnection):
 
         answer = await self._session.post(
             site_url,
+            params=params,
             data=data,
             headers=auth_headers or {"Content-Type": "application/x-www-form-urlencoded"},
             timeout=aiohttp.ClientTimeout(total=5),
@@ -359,6 +362,7 @@ class Connection(BaseConnection):
                     result=result,
                     func_name=func.f_code.co_name,
                     data=data,
+                    params=params,
                     site_url=site_url,
                     log_response=log_response,
                 )
@@ -367,6 +371,7 @@ class Connection(BaseConnection):
             case HTTPStatus.BAD_GATEWAY:
                 await self._write_error_logs(
                     answer=answer,
+                    params=params,
                     func_name=func.f_code.co_name,
                     data=data,
                     site_url=site_url,
@@ -376,6 +381,7 @@ class Connection(BaseConnection):
             case _:
                 await self._write_error_logs(
                     answer=answer,
+                    params=params,
                     func_name=func.f_code.co_name,
                     data=data,
                     site_url=site_url,

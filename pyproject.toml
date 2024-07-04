@@ -88,6 +88,7 @@ ignore = [
     # project specific
     "ANN002",  # args annotation
     "ANN003",  # kwargs annotation
+    "S311",  # use random values
 ]
 exclude = []
 

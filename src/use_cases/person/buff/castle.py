@@ -1,11 +1,16 @@
 from enum import IntEnum
 
 
+SOURCE_OF_LIFE_NAME = "Источник жизни"
+SOURCE_OF_MAGIC_NAME = "Источник магии"
+MAGICAL_ENHANCEMENT_NAME = "Магическое усиление"
+
+
 class MagicTower(IntEnum):
     LUCK = 11
     DODGE = 10
 
-    CRUSHING = 18
+    CRUSHING_BONUS = 18
     DODGE_BONUS = 20
 
     DAMAGE = 26

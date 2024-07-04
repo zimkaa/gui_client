@@ -33,11 +33,12 @@ class BaseConnection(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def post_html(
+    async def post_html(  # noqa: PLR0913
         self,
         site_url: str,
         *,
         data: aiohttp.FormData | None = None,
+        params: dict | None = None,
         log_response: bool = False,
         auth_headers: dict | None = None,
     ) -> str:

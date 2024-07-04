@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from urllib.parse import quote
 
+from src.config import logger
 from src.config.game import urls
 from src.domain.pattern.person import compiled
 from src.use_cases.person.parameter import PERSON_PARAMS
@@ -25,6 +26,8 @@ class Person:
         self.all_hp: float | None = None
         self.buffs: list[str | None] = []
         self.level: int | None = None
+
+        self.logger = logger
 
         self.need_effects: list[str | None] = []
         self.need_parameters: list[str | None] = []
@@ -82,7 +85,9 @@ class Person:
         result = compiled.var_effects2.findall(self.info_page_text)
         if not result:
             msg = "Why empty params in info?"
-            raise Exception(msg)  # noqa: TRY002
+            self.logger.error(self.info_page_text)
+            self.logger.critical(msg)
+
         elements_row: str = result.pop()
         parameters = eval(elements_row)  # noqa: S307
         self.level = int(parameters[0][3])

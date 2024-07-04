@@ -17,6 +17,8 @@ FAROS_WINE_NAME = "Фаросское Вино"
 FIRE_ENHANCEMENT_NAME = "Усиление огня"
 IRIS_BOWL_NAME = "Чаша Айрис"
 
+CHAMPAGNE_NAME = "Бутылка Шампанского"
+
 
 class Elixir(StrEnum):
     RESTORATION = RESTORATION_NAME
@@ -33,3 +35,5 @@ class Elixir(StrEnum):
     FAROS_WINE = FAROS_WINE_NAME
     FIRE_ENHANCEMENT = FIRE_ENHANCEMENT_NAME
     IRIS_BOWL = IRIS_BOWL_NAME
+
+    CHAMPAGNE = CHAMPAGNE_NAME

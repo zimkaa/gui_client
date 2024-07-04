@@ -8,6 +8,11 @@ FIRE_MAGIC_NAME = "Свиток Магии Огня"
 WIND_MAGIC_NAME = "Свиток Магии Воздуха"
 WATER_MAGIC_NAME = "Свиток Магии Воды"
 
+EARTH_POWER_NAME = "Сила земли"
+FIRE_POWER_NAME = "Сила огня"
+WIND_POWER_NAME = "Сила воздуха"
+WATER_POWER_NAME = "Сила воды"
+
 SCROLL_OF_MAJESTY_NAME = "Свиток Величия"
 ANCIENT_SCROLL_OF_MAJESTY_NAME = "Древний Свиток Величия"
 TELEPORT_DIRE_SWAMP_NAME = "Телепорт (Гиблая Топь)"
@@ -21,6 +26,16 @@ FESTIVE_PATRONAGE_NAME = "Праздничное Покровительство"
 DOOR_OF_DIMENSIONS_NAME = "Дверь Измерений"
 WRATH_OF_LOKAR_NAME = "Гнев Локара"
 SUMMON_HELPER_IMP_NAME = "Призыв импа-помощника"
+
+TELEPORT_NAME = "Телепорт"
+
+
+equivalent_scroll_dict = {
+    EARTH_MAGIC_NAME: EARTH_POWER_NAME,
+    FIRE_MAGIC_NAME: FIRE_POWER_NAME,
+    WIND_MAGIC_NAME: WIND_POWER_NAME,
+    WATER_MAGIC_NAME: WATER_POWER_NAME,
+}
 
 
 class Scroll(StrEnum):

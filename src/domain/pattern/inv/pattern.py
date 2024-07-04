@@ -33,6 +33,6 @@ FIND_USE_ITEM_PART1 = r"(?<=get_id=43&act="
 
 FIND_USE_ITEM_PART2 = "&uid=).+?' }"
 
-FIND_USE_ITEM_SCROLL = r"(?<=get_id=43&act={name}&uid=).+?' }"
+FIND_USE_ITEM_SCROLL = r"(?<=get_id=43&act={name}&uid=).+?' "
 
 FIND_USE_ITEM_MAGICREFORM = r"(?<=magicreform\(')\S+{name}\S+(?='\)\" value=\"Использовать)"

@@ -16,7 +16,7 @@
         "stableHit": true,
         "stableMagicHits": false,
         "kick": true,
-        "kickCount": 1,
+        "kickCount": 0,
         "hp": true,
         "mp": true,
         "needHpPercent": 0.9,

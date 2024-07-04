@@ -1,4 +1,5 @@
 from enum import Enum
+from enum import IntEnum
 from enum import StrEnum
 from enum import auto
 
@@ -16,25 +17,27 @@ class PersonType(CaseInsensitiveEnum):
     MAG = auto()
 
 
-class Location(StrEnum):
+class LocationState(StrEnum):
     CITY = auto()
     FIGHT = auto()
-    INVENTAR = auto()
+    INVENTORY = auto()
     NATURE = auto()
     ELIXIR = auto()
     INFO = auto()
+    BAIT = auto()
+    CASTLE = auto()
 
 
-class Teleport(Enum):
-    FP = auto()
-    OKTAL = auto()
-    PODGORN = auto()
-    OKREST_FEIDANA = auto()
-    OKREST_OKTAL = auto()
-    OKREST_ERINGARD = auto()
-    OKREST_FP = auto()
-    SAMYM_BEYT = auto()
-    NORTHERN_TRACT = auto()
-    EASTERN_FORESTS = auto()
-    OKREST_KENGI = auto()
-    GORGE_EL_TER = auto()
+class Teleport(IntEnum):
+    FP = 1
+    OKTAL = 2
+    PODGORN = 3
+    OKREST_FEIDANA = 4
+    OKREST_OKTAL = 5
+    OKREST_ERINGARD = 6
+    OKREST_FP = 7
+    SAMYM_BEYT = 8
+    NORTHERN_TRACT = 9
+    EASTERN_FORESTS = 10
+    OKREST_KENGI = 11
+    GORGE_EL_TER = 12

@@ -46,6 +46,8 @@ class Fight:
         self.logs: list[str]
         self._bot_count: int = 0
 
+        self.logger = logger
+
         self._bot_level = "unknown"
         self._bot_name = "unknown"
 
@@ -73,7 +75,7 @@ class Fight:
             self._print_log()
         else:
             text = f"{self._nickname} wait hit from enemy"
-            logger.error(text)
+            self.logger.error(text)
 
     def _prepare_data(self) -> None:
         name_list = (
@@ -106,23 +108,26 @@ class Fight:
             return result_value
 
         if self.fight_ty and self.fight_ty[4] == "2":
-            logger.debug("end battle value = %s", value)
+            self.logger.debug("end battle value = %s", value)
             return []
 
         if value == "alchemy":
-            logger.debug(f"{self._nickname} alchemy empty Потому что нет свитка")
+            text = f"{self._nickname} alchemy empty Потому что нет свитка и банок"
+            self.logger.debug(text)
             return []
 
         if value in ("lives_g1", "lives_g2", "magic_in", "param_en", "fight_pm", "logs"):
-            logger.debug(f"{self._nickname} {value} Потому что только часть атрибутов доступна")
+            text = f"{self._nickname} {value} Потому что только часть атрибутов доступна"
+            self.logger.debug(text)
             return []
 
         if value in ("fight_ty",):
-            logger.debug(f"{self._nickname} {value} Потому что только часть атрибутов доступна")
+            text = f"{self._nickname} {value} Потому что только часть атрибутов доступна"
+            self.logger.debug(text)
             return []
 
         text = f"{self._nickname} {value} Потому что только часть атрибутов доступна"
-        logger.debug(text)
+        self.logger.debug(text)
         return []
 
     def _get_self_info(self) -> None:
@@ -148,8 +153,7 @@ class Fight:
         second = f" my_od={self._my_od} my_mp={self._my_mp}"
         third = f" my_hp={self._my_hp}"
         text = first + second + third
-        logger.info(text)
-        logger.debug(f"{self.magic_in=}")
+        self.logger.info(text)
 
     def get_state(self) -> tuple[int, float, float]:
         return self._my_od, self._my_mp, self._my_hp
@@ -167,7 +171,7 @@ class Fight:
                 magic.append(int_value)
         if not magic:
             text = f"{self._nickname} No item on belt in fight or scroll"
-            logger.critical(text)
+            self.logger.critical(text)
         return magic
 
     def _create_sorted_df(self, df: DataFrame, magic: list[int]) -> DataFrame:
@@ -186,14 +190,14 @@ class Fight:
         return new_df.sort_values(by="priority")
 
     def _using_mp(self) -> None:
-        logger.info("---------------Use MP--------------------")
+        self.logger.info("---------------Use MP--------------------")
         boost_mp = 0
         for index_num in self._sorted_df.index:
             boost_mp += int(self._sorted_df["mp_boost"][index_num])
             query_mp = self._sorted_df["query"][index_num]
-            condition = boost_mp - self._fight_config.MP_NEED_INSIDE_BATTLE
             if self._my_od <= 30:  # noqa: PLR2004
                 break
+            condition = boost_mp - self._fight_config.MP_NEED_INSIDE_BATTLE
             self._my_od -= int(self._sorted_df["od"][index_num])
             if condition >= 0:
                 self._ina += query_mp
@@ -205,7 +209,7 @@ class Fight:
         part3 = f" condition {condition} boost_mp={boost_mp}"
         part4 = f" my_od={self._my_od}"
         text = part1 + part2 + part3 + part4
-        logger.critical(text)
+        self.logger.critical(text)
 
     def _heal_mp(self) -> None:
         magic = self._check_potion(hits.MP_LIST_MP)
@@ -215,23 +219,16 @@ class Fight:
             self._using_mp()
 
     def _using(self, sorted_df: DataFrame) -> None:
-        logger.info("---------------Use--------------------")
+        self.logger.info("---------------Use--------------------")
         if self._my_od >= 110:  # noqa: PLR2004
             for index_num in sorted_df.index:
                 query_mp = sorted_df["query"][index_num]
                 self._ina += query_mp
                 self._my_od -= int(sorted_df["od"][index_num])
 
-        part1 = f"{self._nickname} USING ina={self._ina}"
-        part4 = f" my_od={self._my_od}"
-        text = part1 + part4
-        logger.critical(text)
-
     def _heal_hp(self) -> None:
         self._ina += "320@"
         self._my_od -= 30
-        text = f"{self._nickname} _heal_hp {self._my_hp=} {self._my_all_hp=}"
-        logger.debug(text)
 
     def _read_json(self) -> None:
         dir_path = Path(__file__).parent.resolve()
@@ -244,18 +241,15 @@ class Fight:
     def _check_use_hp(self) -> None:
         if self._fight_config.HP:
             need_hp = self._conditions_heal(self._my_all_hp, needed_percent=self._fight_config.NEED_HP_PERCENT)
-            logger.warning(f"{need_hp=}")
             if self._heal_check(self._my_hp, need_hp):
                 self._heal_hp()
 
     def _check_use_mp(self) -> None:
         if self._fight_config.MP:
-            logger.warning(f"{self._my_all_mp=}")
-
-            need_mp = self._conditions_heal(self._my_all_mp, need=self._fight_config.NEED_MP_COUNT)
-            logger.warning(f"{need_mp=}")
+            need_mp = self._conditions_heal(self._my_all_mp, need=self._fight_config.MP_NEED_INSIDE_BATTLE)
             if self._heal_check(self._my_mp, need_mp):
-                logger.error(f"\n{need_mp=} {self._my_mp=}\n")
+                text = f"\n{need_mp=} {self._my_mp=}\n"
+                self.logger.debug(text)
                 self._heal_mp()
 
     def _check_use_stable_mag_hit(self) -> None:
@@ -270,7 +264,7 @@ class Fight:
                 self._hit = DataFrame(stable_magic_hit).sort_values(by="priority")
         else:
             text = f"{self._nickname} Not enough MP for mag hit {self._my_mp} < {min_mp_for_hits}"
-            logger.warning(text)
+            self.logger.warning(text)
 
     def _check_use_stable_hit(self) -> None:
         if self._fight_config.STABLE_HIT:
@@ -285,6 +279,30 @@ class Fight:
             else:
                 self._use_kick(hits.MAG_KICK)
 
+    def _check_use_potion(self) -> None:
+        self.logger.debug("_check_use_potion")
+        if self.person_type == PersonType.MAG:
+            item_id = "330"
+            item_name = "Зелье Элементалиста"
+        else:
+            item_id = "328"
+            item_name = "Зелье Ярость Берсерка"
+
+        if item_id in self.magic_in:
+            self._using_potion(item_name)
+
+    def _using_potion(self, item_name: str) -> None:
+        self.logger.debug("_using_potion")
+        self._convert_name_to_value(item_name)
+        if self._my_od >= self._item_od:
+            for num, element in enumerate(self.magic_in):
+                if self._item_value == element:
+                    self._ina += f"{self._item_value}_{self.alchemy[num]}@"
+                    self._my_od -= self._item_od
+
+            text = f"{self._nickname} USING POTION ina={self._ina} my_od={self._my_od}"
+            self.logger.critical(text)
+
     def _check_use_scroll(self) -> None:
         if self._fight_config.SCROLL and self._scroll:
             self._use_scroll(hits.HIT_SCROLLS[5])
@@ -294,7 +312,6 @@ class Fight:
         bot_group = None
 
         file_name = f"fight_config_{self.person_type}"
-        logger.critical(f"{file_name=}")
         fight_conf = get_fight_config(file_name)
         for element in fight_conf:
             if self._bot_name in element["names"]:
@@ -307,13 +324,14 @@ class Fight:
 
         if not config and bot_group:
             config = bot_group["level"].get("default")
-            logger.warning(f"Set default {config=}")
+            text = f"Set default {config=}"
+            self.logger.debug(text)
 
         if config:
             self._fight_config = FightConfig(**config)
         else:
             text = f"{self._nickname} Fight config not found. {self._bot_name=} Use default!!!"
-            logger.critical(text)
+            self.logger.critical(text)
             self._fight_config = FightConfig()
 
     def _init_config(self) -> None:
@@ -322,8 +340,6 @@ class Fight:
         self._check_use_hp()
 
         self._check_use_mp()
-
-        logger.debug(f"{self.magic_in=}")
 
         self._check_use_stable_mag_hit()
 
@@ -357,12 +373,17 @@ class Fight:
             "priority": [0, 1],
         }
 
-    def fight(self) -> None:
+    def fight(self, bait: bool = False) -> None:  # noqa: FBT001, FBT002
+        text = f"fight {bait=}"
+        self.logger.debug(text)
         self._all_info()
 
         self._init_config()
 
         self._get_hit()
+
+        if bait:
+            self._check_use_potion()
 
         self._check_use_kick()
 
@@ -383,9 +404,9 @@ class Fight:
             number += 5
         text = f"hp_bots = {hp_bots}"
         self._bot_count = len(hp_bots)
-        logger.info(text)
+        self.logger.info(text)
         text2 = f"bot_name = {self._bot_name}"
-        logger.debug(text2)
+        self.logger.debug(text2)
 
     def _conditions_heal(self, maximum: float, needed_percent: float = 0.0, need: float = 0.0) -> float:
         if needed_percent and need:
@@ -424,7 +445,7 @@ class Fight:
                     self._my_od -= self._item_od
                     count -= 1
                     text = f"using KICK {self._item_value=}"
-                    logger.debug(text)
+                    self.logger.debug(text)
 
     def _get_hit(self) -> None:
         if self.person_type == PersonType.MAG and self._my_mp > 300 or self.person_type == PersonType.WARRIOR:  # noqa: PLR2004
@@ -446,7 +467,7 @@ class Fight:
                 )
 
         if self._hits_df.empty:
-            logger.info("cooldown magic hit skills")
+            self.logger.info("cooldown magic hit skills")
             self._check_use_kick()
         else:
             self._hits_df = self._hits_df.sort_values(by="priority")

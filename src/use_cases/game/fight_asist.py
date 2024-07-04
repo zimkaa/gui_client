@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import aiohttp
 
 from src.config.game import urls
+from src.domain.pattern.fight import compiled
 from src.domain.pattern.fight import pattern
 from src.domain.value_object.classes import PersonType
 from src.use_cases.game.fight.fight import Fight
@@ -113,8 +114,11 @@ class AsistFight:
         self._fight_class = Fight(login, person_type)
         self.login = login
         self._continue_fight = True
-        self.last_page_text: str = ""
-        self.linked_list = LinkedList()
+        self.last_page_text = ""
+        self.log_linked_list = LinkedList()
+        self.log_file_linked_list = LinkedList()
+        self.fight_id = "0"
+        self.log_page = 1
 
     def _is_alive(self, hp: str) -> bool:
         if hp == "0":
@@ -124,9 +128,8 @@ class AsistFight:
     def _raise_error(self) -> None:
         text_for_message = f"{self.login} YOU KILLED BUT FIGHT NOT ENDED"
         request_file_logger.error(text_for_message)
-        raise Exception(text_for_message)  # noqa: TRY002
 
-    def _check_alive(self) -> None:
+    def _is_check_alive(self) -> bool:
         result: list[str] = re.findall(pattern.FIND_PARAM_OW, self.last_page_text)
         if result:
             new_result = result.pop()
@@ -135,6 +138,8 @@ class AsistFight:
                 hp = param_ow[1]
                 if not self._is_alive(hp):
                     self._raise_error()
+                    return False
+        return True
 
     def _is_end_battle(self) -> bool:
         self._end_battle = re.findall(pattern.FIND_FEXP, self.last_page_text)
@@ -169,13 +174,14 @@ class AsistFight:
             "sum2": fexp[13],
         }
 
-    def _create_fight_data(self) -> dict[str, str]:
-        self._check_alive()
+    def _create_fight_data(self, bait: bool = False) -> dict[str, str]:  # noqa: FBT001, FBT002
+        if not self._is_check_alive():
+            return {"STOP": "STOP"}
         self._fight_class.setup_value(self.last_page_text)
         if self._is_end_battle():
             return self._create_end_battle_data()
 
-        return self._logic()
+        return self._logic(bait=bait)
 
     def _write_log(self) -> None:
         part1 = f"inu-{self._inu} inb-{self._inb} ina-{self._ina}"
@@ -184,10 +190,10 @@ class AsistFight:
         text = part1 + part2 + part3
         request_file_logger.debug(text)
 
-    def _logic(self) -> dict[str, str]:
+    def _logic(self, bait: bool = False) -> dict[str, str]:  # noqa: FBT001, FBT002
         self._my_od, self._my_mp, self._my_hp = self._fight_class.get_state()
 
-        self._fight_class.fight()
+        self._fight_class.fight(bait=bait)
         data = self._fight_class.get_queries_param()
         self._inu = data.inu
         self._inb = data.inb
@@ -209,9 +215,10 @@ class AsistFight:
         all_nodes = []
         element = self._fight_class.logs
         start_add = False
-        latest = self.linked_list.get_latest()
+        latest = self.log_linked_list.get_latest()
         if latest is None:
             start_add = True
+
         for item in element[::-1]:
             if isinstance(item, int):
                 continue
@@ -227,22 +234,35 @@ class AsistFight:
                     my_string += f"{el} "
 
             if start_add:
-                self.linked_list.add_last(Node(my_string))
+                self.log_linked_list.add_last(Node(my_string))
             if latest == my_string:
                 start_add = True
             all_nodes.append(Node(my_string))
 
         if not start_add:
             for node in all_nodes:
-                self.linked_list.add_last(node)
+                self.log_linked_list.add_last(node)
 
     def _write_log_to_file(self) -> None:
-        name = f"logs/{self._fight_class.fight_ty[8]}.txt"
+        name = f"logs/{self.login}_{self._fight_class.fight_ty[8]}.txt"
         with Path(name).open("w") as file:
-            file.write(str(self.linked_list))
+            file.write(str(self.log_linked_list))
 
-    async def _stop_or_hit(self, end_battle: bool = True) -> None:  # noqa: FBT002, FBT001
-        data = self._create_fight_data()
+    def _write_log_history(self) -> None:
+        name = f"logs/{self.login}_full_{self._fight_class.fight_ty[8]}.txt"
+        with Path(name).open("w") as file:
+            file.write(str(self.log_file_linked_list))
+
+    async def _stop_or_hit(self, end_battle: bool = True, write_log: bool = False, bait: bool = False) -> None:  # noqa: FBT002, FBT001
+        data = self._create_fight_data(bait=bait)
+
+        if write_log:
+            if self.fight_id == "0" and self._fight_class.fight_ty:
+                self.fight_id = self._fight_class.fight_ty[8]
+
+            if self.fight_id != "0":
+                await self.get_logs()
+
         if "post_id" in data:
             form_data = self._data_to_formdata(data)
             self.last_page_text = await self.connection.post_html(urls.URL_MAIN, data=form_data)
@@ -251,6 +271,8 @@ class AsistFight:
             request_file_logger.debug("retry")
             self.last_page_text = await self.connection.get_html(urls.URL_MAIN)
             self._battle_log()
+        elif "STOP" in data:
+            self._continue_fight = False
         else:
             request_file_logger.info("Request for the end battle")
             if end_battle:
@@ -258,17 +280,90 @@ class AsistFight:
             self._battle_log()
             self._continue_fight = False
 
+    async def get_logs(self) -> None:  # noqa: C901
+        request_file_logger.debug("get_logs")
+        data = {
+            "fid": self.fight_id,
+            "p": self.log_page,
+        }
+
+        log_text = await self.connection.get_html(urls.URL_LOG, params=data)
+
+        logs_string = compiled.finder_logs.findall(log_text)
+        normal_logs_string = logs_string[0].replace(",,", ',"was empty in log",')
+        logs = eval(normal_logs_string)  # nosec B307  # noqa: S307
+        if logs == []:
+            text = f"Empty log file  {logs_string=}"
+            request_file_logger.debug(text)
+            return
+
+        params_string = compiled.finder_params.findall(log_text)
+        params = eval(params_string[0])  # nosec B307  # noqa: S307
+        pages = params[0]
+
+        if pages == 0:
+            return
+
+        request_file_logger.debug("pages not 0")
+
+        if self.log_page > pages:
+            request_file_logger.debug("pages != 1 and self.log_page >= pages")
+            return
+
+        request_file_logger.debug("pages == 1 or self.log_page < pages")
+        request_file_logger.debug("self page %s", self.log_page)
+
+        latest = self.log_file_linked_list.get_latest()
+        all_nodes = []
+        start_add = False
+        if latest is None:
+            start_add = True
+
+        text = f"{latest=}"
+        request_file_logger.debug(text)
+        for log in logs[1:]:
+            if start_add:
+                self.log_file_linked_list.add_last(Node(str(log)))
+
+            if latest == str(log):
+                start_add = True
+
+            all_nodes.append(Node(str(log)))
+
+        if not start_add:
+            for node in all_nodes:
+                self.log_file_linked_list.add_last(node)
+
+        text = f"{start_add=} {bool(all_nodes)=}"
+        request_file_logger.debug(text)
+
+        if len(logs) >= 21:  # noqa: PLR2004
+            self.log_page += 1
+        if pages == 1:
+            return
+        await self.get_logs()
+
     @timing_decorator()
-    async def run_fight(self, last_page_text: str, ab_started: bool, end_battle: bool = True) -> None:  # noqa: FBT001, FBT002
+    async def run_fight(  # noqa: PLR0913
+        self,
+        last_page_text: str,
+        ab_started: bool,  # noqa: FBT001
+        end_battle: bool = True,  # noqa: FBT001, FBT002
+        write_log: bool = False,  # noqa: FBT001, FBT002
+        bait: bool = False,  # noqa: FBT002, FBT001
+    ) -> None:
         self.last_page_text = last_page_text
         fight_iteration = 0
         start_time = time.perf_counter()
 
         self._continue_fight = True
         while self._continue_fight:
-            await self._stop_or_hit(end_battle)
+            await self._stop_or_hit(end_battle, write_log, bait=bait)
             fight_iteration += 1
             start_time = check_iter(fight_iteration, start_time, self.login)
 
         if ab_started:
             self._write_log_to_file()
+
+        if write_log:
+            self._write_log_history()

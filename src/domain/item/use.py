@@ -11,18 +11,17 @@ binding_dict = {
     Scroll.TELEPORT_DIRE_SWAMP: 33,
     Scroll.TELEPORT_FORT_RUSTLING_LEAVES: 33,
     Scroll.TELEPORT_ISLAND_TUROTOR: 33,
+    Scroll.WRATH_OF_LOKAR: 78,
+    Scroll.SCROLL_OF_PATRONAGE_3H: 79,
+    Scroll.FESTIVE_PATRONAGE: 79,
     Scroll.SCROLL_OF_INEVITABILITY_3H: 80,
     Scroll.FESTIVE_INEVITABILITY: 80,
     Scroll.SCROLL_OF_PURIFICATION: 82,
     Scroll.DOOR_OF_DIMENSIONS: 87,
-    Scroll.WRATH_OF_LOKAR: 78,
-    Scroll.SCROLL_OF_PATRONAGE_3H: 79,
-    Scroll.FESTIVE_PATRONAGE: 79,
-    Scroll.EARTH_MAGIC: 95,
-    Scroll.FIRE_MAGIC: 94,
-    Scroll.WIND_MAGIC: 42,
+    Scroll.WIND_MAGIC: 92,
     Scroll.WATER_MAGIC: 93,
-    Scroll.SUMMON_HELPER_IMP: 165,
+    Scroll.FIRE_MAGIC: 94,
+    Scroll.EARTH_MAGIC: 95,
     Elixir.RESTORATION: 101,  # Эликсир восстановления
     Elixir.BOT_BAIT: 102,  # Приманку Для Ботов
     Elixir.CHAMPAGNE_BOTTLE: 103,  # Бутылку Шампанского
@@ -37,6 +36,7 @@ binding_dict = {
     Elixir.PLANAR_SUMMONING: 152,  # Планарный призыв!!!
     Elixir.FAROS_WINE: 156,  # Фаросское Вино
     Elixir.FIRE_ENHANCEMENT: 161,  # Усиление огня
+    Scroll.SUMMON_HELPER_IMP: 165,
 }
 
 
@@ -48,18 +48,18 @@ class UseBinding(IntEnum):
     TELEPORT_DIRE_SWAMP = 33
     TELEPORT_FORT_RUSTLING_LEAVES = 33
     TELEPORT_ISLAND_TUROTOR = 33
+    WRATH_OF_LOKAR = 78
+    SCROLL_OF_PATRONAGE_3H = 79
+    FESTIVE_PATRONAGE = 79
     SCROLL_OF_INEVITABILITY_3H = 80
     FESTIVE_INEVITABILITY = 80
     SCROLL_OF_PURIFICATION = 82
     DOOR_OF_DIMENSIONS = 87
-    WRATH_OF_LOKAR = 78
-    SCROLL_OF_PATRONAGE_3H = 79
-    FESTIVE_PATRONAGE = 79
 
-    EARTH_MAGIC = 95
-    FIRE_MAGIC = 94
-    WIND_MAGIC = 42
+    WIND_MAGIC = 92
     WATER_MAGIC = 93
+    FIRE_MAGIC = 94
+    EARTH_MAGIC = 95
 
     RESTORATION = 101  # Эликсир восстановления
     BOT_BAIT = 102  # Приманку Для Ботов

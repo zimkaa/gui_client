@@ -55,7 +55,7 @@ class MainComponent(ft.View):
     async def use_default_buff(self, e) -> None:  # noqa: ANN001, ARG002
         self.logger.debug("use_default_buff")
         # await self.game._use_potion(buff_name="Превосходное Зелье Жизни")  # noqa: ERA001
-        await self.game.use_strategy_buff()
+        await self.game.use_buff()
         self.use_status.value = "Buff used"
         await self.use_status.update_async()
 
