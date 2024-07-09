@@ -17,3 +17,9 @@ FIND_EFFECT_NAME = r">([^<|>]+)</"
 name_count_time = r">([^<|>]+)</.+?\(x([^ ]+)\) \(еще ([^<>]+)\)"
 
 FIND_NAME_COUNT_TIME = r"<b>([^<|>]+)</.+?\(x([^ ]+)\) \(еще (\d{,3}:\d\d:\d\d)\)"
+
+FIND_ABILITY_1 = r"(?<=abil_1\(1,')[^<|>]+(?='\)\">)"
+
+FIND_ALL_CLAN_ABILITY = r"location='([^<|>]+)'\" value=\"Использовать бонус\">"
+
+FIND_CLAN_ABILITY = r"location='main\.php\?get_id=56&act={ability}&([^<|>]+)'\" value=\"Использовать бонус\">"

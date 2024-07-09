@@ -14,3 +14,7 @@ finder_eff_time = re.compile(pattern.PATTERN_PART_TIME)
 finder_eff_name = re.compile(pattern.PATTERN_EFFECT_NAME)
 
 finder_name_count_time = re.compile(pattern.FIND_NAME_COUNT_TIME)
+
+finder_ability_1 = re.compile(pattern.FIND_ABILITY_1)
+
+finder_all_clan_ability = re.compile(pattern.FIND_ALL_CLAN_ABILITY)

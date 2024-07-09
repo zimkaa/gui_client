@@ -1,3 +1,5 @@
+from src.domain.item.ability import AbilityTendency
+from src.domain.item.ability import ClanAbility
 from src.domain.item.elixir import Elixir
 from src.domain.item.potion import Potion
 from src.domain.item.scroll import Scroll
@@ -72,6 +74,20 @@ FULL_WARRIOR = [
     effects.Effect(name=castle.MAGICAL_ENHANCEMENT_NAME, castle=DODGE_TOWER, type_=effects.ElementType.CASTLE),
     effects.Effect(name=castle.SOURCE_OF_LIFE_NAME, type_=effects.ElementType.CASTLE_HP),
     effects.Effect(name=castle.SOURCE_OF_MAGIC_NAME, type_=effects.ElementType.CASTLE_MP),
+]
+
+
+TEST = [
+    effects.Effect(name=Potion.IMMUNITY, type_=effects.ElementType.POTION),
+    effects.Effect(name=Potion.MOBILITY, type_=effects.ElementType.POTION, count=3),
+    effects.Effect(name=Elixir.BLISS, type_=effects.ElementType.ELIXIR, count=1),
+    effects.Effect(name=castle.MAGICAL_ENHANCEMENT_NAME, castle=DAMAGE_TOWER, type_=effects.ElementType.CASTLE),
+    effects.Effect(name=castle.SOURCE_OF_LIFE_NAME, type_=effects.ElementType.CASTLE_HP),
+    effects.Effect(name=castle.SOURCE_OF_MAGIC_NAME, type_=effects.ElementType.CASTLE_MP),
+    effects.Effect(name=ClanAbility.BODYGUARD, type_=effects.ElementType.CLAN_ABILITY),
+    effects.Effect(name=ClanAbility.BERSERKER_RAGE, type_=effects.ElementType.CLAN_ABILITY),
+    effects.Effect(name=ClanAbility.VETERANS_BONUS, type_=effects.ElementType.CLAN_ABILITY),
+    effects.Effect(name=AbilityTendency.DARK_CURSE, type_=effects.ElementType.ABILITY),
 ]
 
 

@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+from .ability import ClanAbility
 from .elixir import Elixir
 from .scroll import Scroll
 
@@ -37,6 +38,9 @@ binding_dict = {
     Elixir.FAROS_WINE: 156,  # Фаросское Вино
     Elixir.FIRE_ENHANCEMENT: 161,  # Усиление огня
     Scroll.SUMMON_HELPER_IMP: 165,
+    ClanAbility.VETERANS_BONUS: 301,
+    ClanAbility.BERSERKER_RAGE: 316,  # ЯРОСТЬ БЕРСЕРКА
+    ClanAbility.BODYGUARD: 317,  # ТЕЛОХРАНИТЕЛЬ
 }
 
 

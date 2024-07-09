@@ -10,8 +10,11 @@ import aiohttp
 from src.config import logger
 from src.config.game import urls
 from src.domain.item import use
+from src.domain.item.ability import VETERANS_BONUS_NAME
 from src.domain.item.elixir import Elixir
 from src.domain.item.scroll import Scroll
+from src.domain.pattern.effect import compiled as effect_compiled
+from src.domain.pattern.effect import pattern as effect_pattern
 from src.domain.pattern.inv import pattern
 from src.domain.pattern.location import compiled
 from src.domain.value_object.classes import LocationState
@@ -35,7 +38,7 @@ class Buff:
         self.logger = logger
         self.json_data: dict[str, Any] = {}
 
-    async def use_strategy_buff(self, *, page_text: str, need_effects: list[effects.Effect] | None = None) -> None:
+    async def use_strategy_buff(self, *, page_text: str, need_effects: list[effects.Effect] | None = None) -> None:  # noqa: C901
         self.last_page_text = page_text
         if need_effects is None:
             need_effects = DEFAULT_MAG_EFFECTS
@@ -62,6 +65,22 @@ class Buff:
                         await self._use_castle_mp()
                     case effects.ElementType.CASTLE_HP:
                         await self._use_castle_hp()
+                    case effects.ElementType.CLAN_ABILITY:
+                        await self._use_clan_ability(name=element.name)
+                    case effects.ElementType.ABILITY:
+                        await self._use_ability()
+
+    async def _return_to_ability(self) -> bool:
+        result = compiled.finder_page_ability.findall(self.last_page_text)
+        if not result:
+            self.logger.info("Not in ability")
+            params = {
+                "useaction": "addon-action",
+                "addid": 1,
+            }
+            self.last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
+            return True
+        return True
 
     async def _return_to_castle(self) -> bool:
         result = compiled.finder_return_vcode.findall(self.last_page_text)
@@ -103,12 +122,56 @@ class Buff:
             form_data.add_field("action", "mtowerApply")
             form_data.add_field("effects", effects)
             form_data.add_field("vcode", self.json_data["r"]["vcode"])
-            self.logger.critical(effects)
 
             self.last_page_text = await self.connection.post_html(urls.URL_CASTLE, params=params, data=form_data)
-            self.logger.critical(self.last_page_text)
             self.json_data = json.loads(self.last_page_text)
-            self.logger.critical(self.json_data)
+
+    async def _use_clan_ability(self, name: str) -> None:
+        self.logger.info("_use_clan_ability name=%s", name)
+        if await self._return_to_ability():
+            item_id = use.binding_dict.get(name)  # type: ignore[call-overload]
+            full_pattern = effect_pattern.FIND_CLAN_ABILITY.format(ability=item_id)
+            compiled = re.compile(full_pattern)
+            result = compiled.finditer(self.last_page_text)
+
+            if not result:
+                return
+
+            params = {
+                "get_id": 56,
+                "act": item_id,
+            }
+
+            result = next(result).group(1)  # type: ignore[assignment]
+            kay_value_pairs = result.split("&")  # type: ignore[attr-defined]
+            for item in kay_value_pairs:
+                self.logger.info(item)
+                key, value = item.split("=")
+                params[key] = value
+
+            self.last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
+
+            if name == VETERANS_BONUS_NAME and "Осталось" not in self.last_page_text:
+                self.logger.info("Veterans bonus NOT USED")
+                return
+
+    async def _use_ability(self) -> None:
+        self.logger.info("_use_ability")
+        if await self._return_to_ability():
+            result = effect_compiled.finder_ability_1.finditer(self.last_page_text)
+
+            if not result:
+                return
+
+            vcode = next(result).group(0)
+            form_data = aiohttp.FormData(charset="windows-1251")  # cp1251
+            form_data.add_field("useaction", "addon-action")
+            form_data.add_field("addid", 1)
+            form_data.add_field("post_id", 31)
+            form_data.add_field("vcode", vcode)
+            form_data.add_field("abiluser", self.connection.login)
+
+            self.last_page_text = await self.connection.post_html(urls.URL_MAIN, data=form_data)
 
     async def _use_castle_hp(self) -> None:
         if await self._return_to_castle():

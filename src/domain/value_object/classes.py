@@ -26,6 +26,7 @@ class LocationState(StrEnum):
     INFO = auto()
     BAIT = auto()
     CASTLE = auto()
+    ABILITY = auto()
 
 
 class Teleport(IntEnum):

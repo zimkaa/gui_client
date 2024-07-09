@@ -27,6 +27,8 @@ class ElementType(StrEnum):
     CASTLE = auto()
     CASTLE_HP = auto()
     CASTLE_MP = auto()
+    CLAN_ABILITY = auto()
+    ABILITY = auto()
 
 
 @dataclass

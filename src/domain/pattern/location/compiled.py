@@ -21,6 +21,8 @@ finder_vcode_bait = re.compile(pattern=pattern.FIND_BAIT_VCODE)
 
 finder_bcodes = re.compile(pattern=pattern.FIND_BCODES)
 
+finder_page_ability = re.compile(pattern=pattern.PAGE_ABILITY)
+
 finder_return_vcode = re.compile(pattern=pattern.FIND_RETURN_VCODE)
 
 finder_request_add = re.compile(pattern=pattern.FIND_REQUEST_ADD)

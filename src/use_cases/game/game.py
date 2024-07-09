@@ -60,6 +60,9 @@ class User:
             self.logger.error(text)
             self.error = True
 
+    def get_connection(self) -> Connection:
+        return self.connection
+
     async def init_connection(  # noqa: PLR0913
         self,
         ip: str,
@@ -156,7 +159,7 @@ class User:
 
             text = f"{self.login} Wait fight"
             logger.error(text)
-            await asyncio.sleep(random.uniform(0.5, 0.9))
+            await asyncio.sleep(random.uniform(0.6, 1.3))
 
             self.last_page_text = await self.connection.get_html(urls.URL_MAIN)
 

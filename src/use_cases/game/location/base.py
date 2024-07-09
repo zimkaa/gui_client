@@ -197,6 +197,17 @@ class Location:
 
         return False
 
+    def _is_ability(self) -> bool:
+        self.logger.debug("_is_ability")
+        prepare = compiled.finder_page_ability.findall(self.last_page)
+        if prepare:
+            self.info_string = []
+            self._location = LocationState.ABILITY
+            self.logger.info(self._location)
+            return True
+
+        return False
+
     def _is_castle(self) -> bool:
         self.logger.debug("_is_castle")
         prepare = compiled.finder_bcodes.findall(self.last_page)
@@ -238,6 +249,9 @@ class Location:
 
         if self._is_castle():
             return LocationState.CASTLE
+
+        if self._is_ability():
+            return LocationState.ABILITY
 
         self._location = LocationState.ELIXIR
         self.logger.info(self._location)

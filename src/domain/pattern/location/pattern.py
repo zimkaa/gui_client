@@ -32,3 +32,5 @@ FIND_REQUEST_ADD: Final[str] = r"(?<=var objActions = ).+(?=;)"
 FIND_RETURN_VCODE: Final[str] = r"(?<=get_id=56&act=10&go=ret&vcode=).+?(?='\" value=\"Вернуться\">)"
 
 FIND_VCODE_CASTLE: Final[str] = r"(?<=var vcode = ).+?(?=;)"
+
+PAGE_ABILITY = "Дополнительные возможности персонажа"

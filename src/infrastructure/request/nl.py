@@ -254,16 +254,10 @@ class Connection(BaseConnection):
         result = await answer.text()
         text = f"{self.login} {func_name} {site_url=} \n{answer.status=} {params=} {data=} \n"
 
-        print_debug_text = ""
-        for key, value in answer.__dict__.items():
-            print_debug_text += f"{key}: {value}\n"
-        text += print_debug_text
-
         response_text = f"{result}\n" if result else ""
         all_text = f"{text}\n{response_text}"
         request_file_logger.error(all_text)
         request_error_file_logger.error(all_text)
-        request_error_file_logger.info("Delimiter")
 
     @retry(
         wait=wait_incrementing(start=1, increment=1, max=3),
