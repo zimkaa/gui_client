@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import aiohttp
+from tenacity import after_log
 from tenacity import retry
 from tenacity import stop_after_attempt
 from tenacity import wait_incrementing
@@ -25,6 +26,7 @@ from src.config.game import constants
 from src.config.game import urls
 from src.infrastructure.errors import exception
 from src.infrastructure.errors import request
+from src.infrastructure.errors.game import LoginError
 from src.use_cases.request.base import BaseConnection
 
 
@@ -215,7 +217,7 @@ class Connection(BaseConnection):
 
         if not self._is_logged_in(result):
             logger.error(result)
-            raise
+            raise LoginError
 
         await self.get_html(urls.URL_SELL_INFO)
 
@@ -242,7 +244,7 @@ class Connection(BaseConnection):
             text += f"\n{result=}"
         request_file_logger.debug(text)
 
-    async def _write_error_logs(  # noqa: PLR0913
+    async def _write_error_logs(
         self,
         *,
         answer,  # noqa: ANN001
@@ -262,6 +264,7 @@ class Connection(BaseConnection):
     @retry(
         wait=wait_incrementing(start=1, increment=1, max=3),
         stop=stop_after_attempt(3),
+        after=after_log(request_error_file_logger, logging.WARNING),
         reraise=True,
     )  # noqa: ERA001, RUF100
     async def get_html(self, site_url: str, *, params: dict | None = None, log_response: bool = False) -> str:
@@ -326,9 +329,10 @@ class Connection(BaseConnection):
     @retry(
         wait=wait_incrementing(start=1, increment=1, max=3),
         stop=stop_after_attempt(3),
+        after=after_log(request_error_file_logger, logging.WARNING),
         reraise=True,
     )  # noqa: ERA001, RUF100
-    async def post_html(  # noqa: PLR0913
+    async def post_html(
         self,
         site_url: str,
         *,

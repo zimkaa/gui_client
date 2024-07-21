@@ -12,7 +12,7 @@ from src.use_cases.request.base import Proxy
 
 
 async def my_ip(*, user_proxy: Proxy | None = None) -> str:
-    random_site = random.choice(list(ip.CheckIPSite))  # noqa: S311
+    random_site = random.choice(list(ip.CheckIPSite))
 
     if not user_proxy:
         user_proxy = Proxy(proxy=None, proxy_auth=None)

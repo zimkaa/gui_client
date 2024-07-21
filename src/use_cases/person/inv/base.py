@@ -39,7 +39,7 @@ class PersonInv:
         for element in self.effects_to_use:
             if (
                 self.identical_item_collection.get_item(element.name) is None
-                and self.identical_item_collection.get_item(element.equivalent) is None
+                and self.identical_item_collection.get_list_items(element.equivalent) is None
             ):
                 logger.error(f"no element {element.name} in inventar")
                 no_items.append(element)

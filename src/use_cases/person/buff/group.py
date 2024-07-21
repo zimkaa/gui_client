@@ -67,7 +67,6 @@ MAG_FULL_FIRE_EARTH = [
 FULL_WARRIOR = [
     effects.Effect(name=Potion.IMMUNITY, type_=effects.ElementType.POTION),
     effects.Effect(name=Potion.EXCELLENT_SHELL, type_=effects.ElementType.POTION, count=4),
-    effects.Effect(name=Elixir.POTION_BLOODTHIRSTY, type_=effects.ElementType.ELIXIR, count=2),
     effects.Effect(name=Elixir.SWIFTNESS, type_=effects.ElementType.ELIXIR, count=2),
     effects.Effect(name=Elixir.POTION_BLOODTHIRSTY, type_=effects.ElementType.ELIXIR, count=2),
     # effects.Effect(name=Elixir.SWIFTNESS, type_=effects.ElementType.SCROLL, count=2),  # 2 льда  # noqa: ERA001

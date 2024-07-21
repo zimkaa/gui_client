@@ -60,6 +60,7 @@ async def connection_factory(person: PersonWithConnectionData) -> Connection:
         logger.debug("connect connection id = %s", id(connection))
         await connection.start()
     except Exception as err:
+        text = f"{connection.login} {err=}"
         logger.error("err=%s", err)
         raise
     return connection

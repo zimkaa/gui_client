@@ -44,9 +44,7 @@ class BFS:
         return first_node
 
     def frontier_is_empty(self) -> bool:
-        if len(self.frontier) == 0:
-            return True
-        return False
+        return len(self.frontier) == 0
 
     def search(self) -> list[str] | None:
         while True:

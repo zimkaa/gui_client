@@ -33,7 +33,7 @@ class BaseConnection(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def post_html(  # noqa: PLR0913
+    async def post_html(
         self,
         site_url: str,
         *,

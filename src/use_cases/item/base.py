@@ -28,6 +28,13 @@ class IdenticalItemCollection:
     def get_item(self, name: str) -> list[NeverItem] | None:
         return self.items.get(name)
 
+    def get_list_items(self, names: list[str]) -> list[NeverItem] | None:
+        list_items = []
+        for item_name in names:
+            if value := self.items.get(item_name):
+                list_items.extend(value)
+        return list_items
+
     def get_items_count(self, name: str) -> int:
         items = self.items.get(name)
         if not items:
@@ -115,22 +122,22 @@ def get_items(
         try:
             (group_property, group_requirements) = get_groups(item)
         except Exception as e:
-            logger.error("i=%s item=%s error=%s", i, item, e)
+            text = f"{i=} {item=} {e=}"
+            logger.error(text)
             raise
         try:
             property_elements = get_property_elements(group_property)
         except Exception as e:
-            logger.error("i=%s item=%s error=%s", i, item, e)
+            text = f"{i=} {item=} {e=}"
+            logger.error(text)
             raise
         try:
             requirements_elements = get_requirement_elements(group_requirements)
         except Exception as e:
-            logger.error("i=%s item=%s error=%s", i, item, e)
+            text = f"{i=} {item=} {e=}"
+            logger.error(text)
             raise
         actions_elements = get_action_elements(item)
-
-        # if not actions_elements:
-        #     logger.error(f"{i=} {item=}")  # noqa: ERA001
 
         name = text_matches.pop(0).strip()
         identical_item_collection.add_item(name)

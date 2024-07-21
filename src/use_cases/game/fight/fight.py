@@ -159,9 +159,7 @@ class Fight:
         return self._my_od, self._my_mp, self._my_hp
 
     def _heal_check(self, value: float, need_to_check: float) -> bool:
-        if value <= need_to_check:
-            return True
-        return False
+        return value <= need_to_check
 
     def _check_potion(self, my_list: list[int]) -> list[int]:
         magic = []

@@ -30,7 +30,7 @@ class Location:
     def __init__(self, *, connect: Connection, last_page: str) -> None:
         self._connect = connect
         self.logger = logger
-        self.last_page = last_page
+        self._last_page = last_page
 
         self.info_string: list[str]
         self._location: LocationState
@@ -39,7 +39,7 @@ class Location:
 
     def get_actual_location(self, actual_page: str) -> LocationState:
         self.logger.debug("get_actual_location")
-        self.last_page = actual_page
+        self._last_page = actual_page
         self._where_i_am()
         return self._location
 
@@ -72,33 +72,33 @@ class Location:
 
     async def _from_city_go_to_inventory(self) -> None:
         self.logger.debug("_from_city_go_to_inventory")
-        (prepare,) = compiled.finder_in_city.findall(self.last_page)
+        (prepare,) = compiled.finder_in_city.findall(self._last_page)
         vcode = prepare.split("=")[-1]
         data = {"get_id": "56", "act": "10", "go": "inv", "vcode": vcode}
 
-        self.last_page = await self._connect.get_html(urls.URL_MAIN, params=data)
+        self._last_page = await self._connect.get_html(urls.URL_MAIN, params=data)
         self._where_i_am()
 
     async def _from_castle_go_to_inventory(self) -> None:
         self.logger.debug("_from_castle_go_to_inventory")
 
-        (prepare,) = compiled.finder_vcode_castle.findall(self.last_page)
+        (prepare,) = compiled.finder_vcode_castle.findall(self._last_page)
         data_list = eval(prepare)  # noqa: S307
         data = {"get_id": "56", "act": "10", "go": "inv", "vcode": data_list[1][1]}
 
-        self.last_page = await self._connect.get_html(urls.URL_MAIN, params=data)
+        self._last_page = await self._connect.get_html(urls.URL_MAIN, params=data)
         self._where_i_am()
 
     async def _from_nature_go_to_inventory(self) -> None:
         self.logger.debug("_from_nature_go_to_inventory")
-        (prepare,) = compiled.finder_nature_to_inv.findall(self.last_page)
+        (prepare,) = compiled.finder_nature_to_inv.findall(self._last_page)
         text = f"{prepare=}"
         self.logger.debug(text)
 
         if prepare:
             request_data = {"get_id": "56", "act": "10", "go": "inv", "vcode": prepare}
 
-            self.last_page = await self._connect.get_html(urls.URL_MAIN, params=request_data)
+            self._last_page = await self._connect.get_html(urls.URL_MAIN, params=request_data)
             self._where_i_am()
 
     async def _from_info_go_to_inventory(self) -> None:
@@ -107,27 +107,29 @@ class Location:
         if not self.info_string:
             self.logger.debug("not self.info_string")
             try:
-                (prepare,) = compiled.finder_inv.findall(self.last_page)
+                (prepare,) = compiled.finder_inv.findall(self._last_page)
             except Exception:
-                self.logger.exception(self.last_page)
+                text = f"{self._connect.login} {self._last_page=}"
+                self.logger.exception(text)
                 # raise
                 return
         else:
             self.logger.debug("self.info_string exists")
             prepare = self.info_string
+            self.logger.debug(prepare)
 
         if prepare:
-            vcode = prepare.split("=")[-1]
+            vcode = prepare[-1]
             data = {"get_id": "56", "act": "10", "go": "inv", "vcode": vcode}
 
-            self.last_page = await self._connect.get_html(urls.URL_MAIN, params=data)
+            self._last_page = await self._connect.get_html(urls.URL_MAIN, params=data)
             self._where_i_am()
         else:
             self.logger.debug('from_info_to_inventar not find ?<=&go=inv&vcode=).+(?=\'" value="Инвентарь')
 
     async def _from_elixir_go_to_inventory(self) -> None:
         self.logger.debug("_from_elixir_go_to_inventory")
-        self.last_page = await self._connect.get_html(urls.URL_ALL_ITEMS)
+        self._last_page = await self._connect.get_html(urls.URL_ALL_ITEMS)
         self._where_i_am()
 
     async def _do_nothing(self) -> None:
@@ -136,7 +138,7 @@ class Location:
 
     def _is_fight(self) -> bool:
         self.logger.debug("_is_fight")
-        if location_constants.FIND_FIGHT in self.last_page:
+        if location_constants.FIND_FIGHT in self._last_page:
             self.info_string = []
             self._location = LocationState.FIGHT
             self.logger.info(self._location)
@@ -147,7 +149,7 @@ class Location:
     def _is_nature(self) -> bool:
         self.logger.debug("_is_nature")
         # if location_constants.FIND_DISABLED not in self.last_page:
-        if location_constants.FIND_NATURE in self.last_page:
+        if location_constants.FIND_NATURE in self._last_page:
             self.info_string = []
             self._location = LocationState.NATURE
             self.logger.info(self._location)
@@ -157,7 +159,7 @@ class Location:
 
     def _is_inventory(self) -> bool:
         self.logger.debug("_is_inventory")
-        if location_constants.FIND_INVENTORY in self.last_page:
+        if location_constants.FIND_INVENTORY in self._last_page:
             self.info_string = []
             self._location = LocationState.INVENTORY
             self.logger.info(self._location)
@@ -167,7 +169,7 @@ class Location:
 
     def _is_city(self) -> bool:
         self.logger.debug("_is_city")
-        prepare = compiled.finder_in_city.findall(self.last_page)
+        prepare = compiled.finder_in_city.findall(self._last_page)
         if prepare:
             self.info_string = prepare
             self._location = LocationState.CITY
@@ -178,7 +180,7 @@ class Location:
 
     def _is_info(self) -> bool:
         self.logger.debug("_is_info")
-        prepare = compiled.finder_inv.findall(self.last_page)
+        prepare = compiled.finder_inv.findall(self._last_page)
         if prepare:
             self.info_string = prepare
             self._location = LocationState.INFO
@@ -189,7 +191,7 @@ class Location:
 
     def _is_elixir(self) -> bool:
         self.logger.debug("_is_elixir")
-        if location_constants.FIND_ELIXIR in self.last_page:
+        if location_constants.FIND_ELIXIR in self._last_page:
             self.info_string = []
             self._location = LocationState.ELIXIR
             self.logger.info(self._location)
@@ -199,7 +201,7 @@ class Location:
 
     def _is_ability(self) -> bool:
         self.logger.debug("_is_ability")
-        prepare = compiled.finder_page_ability.findall(self.last_page)
+        prepare = compiled.finder_page_ability.findall(self._last_page)
         if prepare:
             self.info_string = []
             self._location = LocationState.ABILITY
@@ -210,15 +212,15 @@ class Location:
 
     def _is_castle(self) -> bool:
         self.logger.debug("_is_castle")
-        prepare = compiled.finder_bcodes.findall(self.last_page)
+        prepare = compiled.finder_bcodes.findall(self._last_page)
         if prepare:
             self.info_string = prepare
             self._location = LocationState.CASTLE
             self.logger.info(self._location)
             return True
 
-        if location_constants.FIND_MTOWER in self.last_page:
-            self.info_string = [self.last_page]
+        if location_constants.FIND_MTOWER in self._last_page:
+            self.info_string = [self._last_page]
             self._location = LocationState.CASTLE
             self.logger.info(self._location)
             return True
@@ -259,9 +261,9 @@ class Location:
 
     def _find_teleport(self) -> str | None:
         self.logger.debug("_find_teleport")
-        prepare = compiled.finder_teleport.findall(self.last_page)
+        prepare = compiled.finder_teleport.findall(self._last_page)
         if not prepare:
-            self.logger.error(self.last_page)
+            self.logger.error(self._last_page)
             text = "No scrolls Teleport----"
             self.logger.error(text)
             return None
@@ -296,23 +298,23 @@ class Location:
             pattern_vcode += go
             pattern_vcode += location_pattern.FIND_CITY_ACTION_VCODE_PART2
             logger.error(f"{pattern_vcode=}")
-            vcode = re.findall(pattern_vcode, self.last_page)
+            vcode = re.findall(pattern_vcode, self._last_page)
             query.update({"go": go, "vcode": vcode[0]})
-            self.last_page = await self._connect.get_html(urls.URL_MAIN, params=query)
+            self._last_page = await self._connect.get_html(urls.URL_MAIN, params=query)
             self._where_i_am()
 
     async def _go_to_building(self) -> None:
         self.logger.debug("_go_to_building")
         base_query = {"get_id": "56", "act": "10", "go": "", "vcode": ""}
 
-        self.last_page = await self._connect.get_html(urls.URL_MAIN, params=base_query)
+        self._last_page = await self._connect.get_html(urls.URL_MAIN, params=base_query)
         self._where_i_am()
 
     async def _go_to_watch_tower(self) -> None:
         self.logger.debug("_go_to_watch_tower")
-        vcode = compiled.finder_vcode_bait.findall(self.last_page)
+        vcode = compiled.finder_vcode_bait.findall(self._last_page)
         base_query = {"get_id": "56", "act": "10", "go": "build", "pl": "citydef2", "vcode": vcode[0]}
-        self.last_page = await self._connect.get_html(urls.URL_MAIN, params=base_query)
+        self._last_page = await self._connect.get_html(urls.URL_MAIN, params=base_query)
         self._where_i_am()
 
     async def _go_to_market(self) -> None:
@@ -333,7 +335,7 @@ class Location:
 
         text = f"request : {data}"
         self.logger.debug(text)
-        self.last_page = await self._connect.post_html(urls.URL_MAIN, data=data)
+        self._last_page = await self._connect.post_html(urls.URL_MAIN, data=data)
         self._where_i_am()
 
     async def go_to_location(self, destination: LocationState) -> None:
@@ -355,14 +357,14 @@ class Location:
 
     async def _go_to_bait(self) -> None:
         self.logger.debug("_go_to_bait")
-        self.last_page = await self._connect.get_html(urls.URL_MAIN)
+        self._last_page = await self._connect.get_html(urls.URL_MAIN)
         self._where_i_am()
         if self._location != LocationState.CITY:
             await self.go_to_location(destination=LocationState.INVENTORY)
             self._where_i_am()
             if self._location == LocationState.ELIXIR:
-                self.last_page = await self._connect.get_html(urls.URL_ALL_ITEMS)
-            self.last_page = await self._connect.get_html(urls.URL_SCROLL)
+                self._last_page = await self._connect.get_html(urls.URL_ALL_ITEMS)
+            self._last_page = await self._connect.get_html(urls.URL_SCROLL)
             await self._use_teleport(Teleport.OKTAL)
 
         await self._go_to_watch_tower()
@@ -370,7 +372,7 @@ class Location:
 
     async def _join_to_bait(self) -> None:
         self.logger.debug("_join_to_bait")
-        actions = compiled.finder_request_add.findall(self.last_page)
+        actions = compiled.finder_request_add.findall(self._last_page)
         if not actions:
             msg = "Not found action"
             self.logger.error(msg)
@@ -388,8 +390,8 @@ class Location:
         form_data.add_field("vcode", vcode)
         form_data.add_field("r", random.random())  # noqa: S311, RUF100
 
-        self.last_page = await self._connect.post_html(urls.URL_EVENT, data=form_data)
-        self.json_data = json.loads(self.last_page)
+        self._last_page = await self._connect.post_html(urls.URL_EVENT, data=form_data)
+        self.json_data = json.loads(self._last_page)
 
         await self._set_money()
 
@@ -407,7 +409,7 @@ class Location:
         form_data.add_field("vcode", vcode)
         form_data.add_field("r", random.random())  # noqa: S311, RUF100
 
-        self.last_page = await self._connect.post_html(urls.URL_EVENT, data=form_data)
+        self._last_page = await self._connect.post_html(urls.URL_EVENT, data=form_data)
 
     async def _go_to_inventory(self, location: LocationState) -> None:
         self.logger.debug("_go_to_inventory")

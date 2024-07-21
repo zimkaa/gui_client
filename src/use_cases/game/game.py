@@ -18,14 +18,17 @@ from src.use_cases.game.location.base import Location
 
 
 if TYPE_CHECKING:
+    from src.infrastructure.utils.person_files import UserInfo
     from src.use_cases.person.buff import effects
     from src.use_cases.request.base import Proxy
 
 
 class User:
-    def __init__(self) -> None:
+    def __init__(self, *, login: str | None = None, user_info: UserInfo | None = None) -> None:
         self.connection: Connection
-        self.login: str
+        if login:
+            self.login = login
+        self.user_info = user_info
         self.last_page_text: str = ""
 
         self.online: bool = False
@@ -33,12 +36,14 @@ class User:
 
         self.clan: str = ""
         self.ab_started = True
+        self._active = True
 
         self.logger = logger
 
         self.fight: AsistFight
-        self.location: Location
+        self._location: Location
         self.buff: Buff
+        self._saved_effects: list[effects.Effect] | None = None
 
     async def _check_ip(
         self,
@@ -62,6 +67,41 @@ class User:
 
     def get_connection(self) -> Connection:
         return self.connection
+
+    @property
+    def is_active(self) -> bool:
+        return self._active
+
+    def set_saved_effects(self, effects: list[effects.Effect]) -> None:
+        self._saved_effects = effects
+
+    def change_active(self) -> None:
+        self._active = not self._active
+
+    async def new_init_connection(self) -> None:
+        assert self.user_info is not None
+        self.person_type = self.user_info.type_
+
+        await self._check_ip(ip=self.user_info.ip, proxy_data=self.user_info.proxy_data, proxy=True)
+
+        assert self.login is not None
+        if not self.error:
+            self.connection = Connection(
+                proxy_data=self.user_info.proxy_data,
+                login=self.login,
+                password=self.user_info.password,
+            )
+            self.last_page_text = await self.connection.start()
+            self.online = True
+
+        self.fight = AsistFight(
+            connection=self.connection,
+            login=self.login,
+            person_type=self.person_type,
+        )
+
+        self.init_location()
+        self.init_buff()
 
     async def init_connection(  # noqa: PLR0913
         self,
@@ -96,7 +136,7 @@ class User:
         self.init_buff()
 
     def init_location(self) -> None:
-        self.location = Location(
+        self._location = Location(
             connect=self.connection,
             last_page=self.last_page_text,
         )
@@ -104,7 +144,7 @@ class User:
     def init_buff(self) -> None:
         self.buff = Buff(
             connection=self.connection,
-            location=self.location,
+            location=self._location,
         )
 
     async def close(self) -> None:
@@ -112,6 +152,7 @@ class User:
 
     async def get_info(self, nick: str | None = None) -> str:
         if nick is None:
+            assert self.login is not None
             nick = self.login
         name = quote(nick, encoding=constants.ENCODING)
         # TODO: need do retry get  # noqa: FIX002, TD002, TD003
@@ -129,13 +170,13 @@ class User:
         self.clan = answer
         return answer
 
-    async def use_buff(self, *, need_effects: list[effects.Effect] | None = None) -> None:
-        location = self.location.get_actual_location(self.last_page_text)
+    async def use_buff(self) -> None:
+        location = self._location.get_actual_location(self.last_page_text)
         if location != LocationState.INVENTORY:
-            await self.location.go_to_location(LocationState.INVENTORY)
+            await self._location.go_to_location(LocationState.INVENTORY)
 
         self.last_page_text = await self.get_info()
-        await self.buff.use_strategy_buff(page_text=self.last_page_text, need_effects=need_effects)
+        await self.buff.use_strategy_buff(page_text=self.last_page_text, need_effects=self._saved_effects)
 
     async def start_fight(self, end_battle: bool = True, write_log: bool = False, bait: bool = False) -> None:  # noqa: FBT001, FBT002
         bait = True
@@ -198,4 +239,4 @@ class User:
         return "Online"
 
     async def go_to_location(self, *, location: LocationState = LocationState.BAIT) -> None:
-        await self.location.go_to_location(location)
+        await self._location.go_to_location(location)

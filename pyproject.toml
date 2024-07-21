@@ -12,19 +12,20 @@ pydantic-settings = "^2.3.0"
 tomli = "^2.0.1"
 pyyaml = "^6.0.1"
 sentry-sdk = "^2.4.0"
-flet = "^0.22.1"
 aiohttp = "^3.9.5"
 dependency-injector = "^4.41.0"
 tenacity = "^8.3.0"
 pandas = "^2.2.2"
+lxml = "^5.2.2"
+flet = "^0.23.2"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.4.7"
 mypy = "^1.10.0"
 pytest = "^8.2.1"
 pre-commit = "^3.7.1"
 vulture = "^2.11"
-pytest-asyncio = "^0.23.7"
+ruff = "^0.5.4"
+pytest-asyncio = "^0.23.8"
 
 [build-system]
 requires = ["poetry-core"]
@@ -101,7 +102,7 @@ force-single-line = true
 
 [tool.ruff.lint.extend-per-file-ignores]
 "tests/*.py" = ["ANN101", "S101", "S311"]
-"logger/custom.py" = ["A003"]
+"logger/custom.py" = ["A003", "PERF403"]
 
 [tool.ruff.format]
 quote-style = "double"

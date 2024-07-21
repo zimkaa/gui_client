@@ -11,7 +11,7 @@ def run_app() -> None:
     main = RootElement()
 
     try:
-        ft.app(port=8580, view=ft.AppView.WEB_BROWSER, target=main.start)
-        # ft.app(target=main.start)  # noqa: ERA001
+        ft.app(port=8580, view=ft.AppView.WEB_BROWSER, target=main.mass_start)
+        # ft.app(port=8580, view=ft.AppView.WEB_BROWSER, target=main.start)  # noqa: ERA001
     finally:
         logger.info("App stopped.")

@@ -32,23 +32,23 @@ if TYPE_CHECKING:
 class Buff:
     def __init__(self, *, connection: Connection, location: Location) -> None:
         self.connection = connection
-        self.location = location
+        self._location = location
 
-        self.last_page_text: str = ""
+        self._last_page_text: str = ""
         self.logger = logger
-        self.json_data: dict[str, Any] = {}
+        self._json_data: dict[str, Any] = {}
 
     async def use_strategy_buff(self, *, page_text: str, need_effects: list[effects.Effect] | None = None) -> None:  # noqa: C901
-        self.last_page_text = page_text
+        self._last_page_text = page_text
         if need_effects is None:
             need_effects = DEFAULT_MAG_EFFECTS
 
-        self.effects = effects.PersonEffects(page_text=self.last_page_text, need_effects=need_effects)
+        self.effects = effects.PersonEffects(page_text=self._last_page_text, need_effects=need_effects)
         element_list = self.effects.get_effects()
         text = f"Need effects: {element_list}"
         self.logger.info(text)
 
-        self.last_page_text = await self.connection.get_html(urls.URL_POTION)
+        self._last_page_text = await self.connection.get_html(urls.URL_POTION)
 
         if element_list:
             for element in element_list:
@@ -71,19 +71,19 @@ class Buff:
                         await self._use_ability()
 
     async def _return_to_ability(self) -> bool:
-        result = compiled.finder_page_ability.findall(self.last_page_text)
+        result = compiled.finder_page_ability.findall(self._last_page_text)
         if not result:
             self.logger.info("Not in ability")
             params = {
                 "useaction": "addon-action",
                 "addid": 1,
             }
-            self.last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
+            self._last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
             return True
         return True
 
     async def _return_to_castle(self) -> bool:
-        result = compiled.finder_return_vcode.findall(self.last_page_text)
+        result = compiled.finder_return_vcode.findall(self._last_page_text)
         if result:
             vcode = result[0]
 
@@ -93,11 +93,11 @@ class Buff:
                 "go": "ret",
                 "vcode": vcode,
             }
-            self.last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
+            self._last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
 
-        if self.location.get_actual_location(self.last_page_text) == LocationState.CASTLE:
-            bcodes = self.location.info_string
-            self.json_data = json.loads(bcodes[0])
+        if self._location.get_actual_location(self._last_page_text) == LocationState.CASTLE:
+            bcodes = self._location.info_string
+            self._json_data = json.loads(bcodes[0])
             return True
 
         self.logger.info("Not in castle")
@@ -109,11 +109,11 @@ class Buff:
             data = {
                 "action": "building",
                 "building": "mtower",
-                "vcode": self.json_data["mtower"],
+                "vcode": self._json_data["mtower"],
                 "r": random.random(),
             }
-            self.last_page_text = await self.connection.get_html(urls.URL_CASTLE, params=data)
-            self.json_data = json.loads(self.last_page_text)
+            self._last_page_text = await self.connection.get_html(urls.URL_CASTLE, params=data)
+            self._json_data = json.loads(self._last_page_text)
             effects = ",".join(map(str, elements))
 
             params = {"r": random.random()}
@@ -121,10 +121,10 @@ class Buff:
             form_data = aiohttp.FormData(charset="windows-1251")  # cp1251
             form_data.add_field("action", "mtowerApply")
             form_data.add_field("effects", effects)
-            form_data.add_field("vcode", self.json_data["r"]["vcode"])
+            form_data.add_field("vcode", self._json_data["r"]["vcode"])
 
-            self.last_page_text = await self.connection.post_html(urls.URL_CASTLE, params=params, data=form_data)
-            self.json_data = json.loads(self.last_page_text)
+            self._last_page_text = await self.connection.post_html(urls.URL_CASTLE, params=params, data=form_data)
+            self._json_data = json.loads(self._last_page_text)
 
     async def _use_clan_ability(self, name: str) -> None:
         self.logger.info("_use_clan_ability name=%s", name)
@@ -132,7 +132,7 @@ class Buff:
             item_id = use.binding_dict.get(name)  # type: ignore[call-overload]
             full_pattern = effect_pattern.FIND_CLAN_ABILITY.format(ability=item_id)
             compiled = re.compile(full_pattern)
-            result = compiled.finditer(self.last_page_text)
+            result = compiled.finditer(self._last_page_text)
 
             if not result:
                 return
@@ -149,16 +149,16 @@ class Buff:
                 key, value = item.split("=")
                 params[key] = value
 
-            self.last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
+            self._last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
 
-            if name == VETERANS_BONUS_NAME and "Осталось" not in self.last_page_text:
+            if name == VETERANS_BONUS_NAME and "Осталось" not in self._last_page_text:
                 self.logger.info("Veterans bonus NOT USED")
                 return
 
     async def _use_ability(self) -> None:
         self.logger.info("_use_ability")
         if await self._return_to_ability():
-            result = effect_compiled.finder_ability_1.finditer(self.last_page_text)
+            result = effect_compiled.finder_ability_1.finditer(self._last_page_text)
 
             if not result:
                 return
@@ -171,14 +171,14 @@ class Buff:
             form_data.add_field("vcode", vcode)
             form_data.add_field("abiluser", self.connection.login)
 
-            self.last_page_text = await self.connection.post_html(urls.URL_MAIN, data=form_data)
+            self._last_page_text = await self.connection.post_html(urls.URL_MAIN, data=form_data)
 
     async def _use_castle_hp(self) -> None:
         if await self._return_to_castle():
             vcode = (
-                self.json_data.get("fountain")
-                if self.json_data.get("fountain")
-                else self.json_data.get("ba")["fountain"]  # type: ignore[index]
+                self._json_data.get("fountain")
+                if self._json_data.get("fountain")
+                else self._json_data.get("ba")["fountain"]  # type: ignore[index]
             )
             data = {
                 "action": "building",
@@ -186,8 +186,8 @@ class Buff:
                 "vcode": vcode,
                 "r": random.random(),
             }
-            self.last_page_text = await self.connection.get_html(urls.URL_CASTLE, params=data)
-            data = json.loads(self.last_page_text)
+            self._last_page_text = await self.connection.get_html(urls.URL_CASTLE, params=data)
+            data = json.loads(self._last_page_text)
 
             params = {"r": random.random()}
 
@@ -196,20 +196,20 @@ class Buff:
             form_data.add_field("hp", 1000)
             form_data.add_field("vcode", data["r"]["hp_vcode"])
 
-            self.last_page_text = await self.connection.post_html(urls.URL_CASTLE, params=params, data=form_data)
-            self.json_data = json.loads(self.last_page_text)
+            self._last_page_text = await self.connection.post_html(urls.URL_CASTLE, params=params, data=form_data)
+            self._json_data = json.loads(self._last_page_text)
 
     async def _use_castle_mp(self) -> None:
         if await self._return_to_castle():
-            vcode = self.json_data.get("pond") if self.json_data.get("pond") else self.json_data.get("ba")["pond"]  # type: ignore[index]
+            vcode = self._json_data.get("pond") if self._json_data.get("pond") else self._json_data.get("ba")["pond"]  # type: ignore[index]
             data = {
                 "action": "building",
                 "building": "pond",
                 "vcode": vcode,
                 "r": random.random(),
             }
-            self.last_page_text = await self.connection.get_html(urls.URL_CASTLE, params=data)
-            data = json.loads(self.last_page_text)
+            self._last_page_text = await self.connection.get_html(urls.URL_CASTLE, params=data)
+            data = json.loads(self._last_page_text)
 
             params = {"r": random.random()}
 
@@ -218,20 +218,22 @@ class Buff:
             form_data.add_field("mp", 1000)
             form_data.add_field("vcode", data["r"]["mp_vcode"])
 
-            self.last_page_text = await self.connection.post_html(urls.URL_CASTLE, params=params, data=form_data)
-            self.json_data = json.loads(self.last_page_text)
+            self._last_page_text = await self.connection.post_html(urls.URL_CASTLE, params=params, data=form_data)
+            self._json_data = json.loads(self._last_page_text)
 
     async def _use_potion(self, *, element: effects.Effect, count: int = 1) -> None:
         potion_name = element.name
         item_pattern = pattern.FIND_USE_ITEM_MAGICREFORM.format(name=potion_name)
         finder_use_item = re.compile(item_pattern)
 
-        result = finder_use_item.finditer(self.last_page_text)
+        result = finder_use_item.finditer(self._last_page_text)
         if not result:
-            potion_name = element.equivalent
-            item_pattern = pattern.FIND_USE_ITEM_MAGICREFORM.format(name=potion_name)
-            finder_use_item = re.compile(item_pattern)
-            result = finder_use_item.finditer(self.last_page_text)
+            for potion_name in element.equivalent:
+                item_pattern = pattern.FIND_USE_ITEM_MAGICREFORM.format(name=potion_name)
+                finder_use_item = re.compile(item_pattern)
+                result = finder_use_item.finditer(self._last_page_text)
+                if result:
+                    break
 
         if not result:
             return
@@ -243,7 +245,7 @@ class Buff:
             try:
                 item = next(result).group(0)
             except StopIteration:
-                msg = f"Can't find item: {potion_name}"
+                msg = f"{self.connection.login} Can't find item: {potion_name}"
                 self.logger.exception(msg)
                 break
 
@@ -255,12 +257,12 @@ class Buff:
             form_data.add_field("vcode", vcode)
             form_data.add_field("fornickname", fornickname)
 
-            self.last_page_text = await self.connection.post_html(urls.URL_MAIN, data=form_data)
+            self._last_page_text = await self.connection.post_html(urls.URL_MAIN, data=form_data)
 
-            result = finder_use_item.finditer(self.last_page_text)
+            result = finder_use_item.finditer(self._last_page_text)
 
     async def _use_elixir(self, *, elixir_name: Elixir = Elixir.BLISS, count: int = 1) -> None:
-        self.last_page_text = await self.connection.get_html(urls.URL_ELIXIR)
+        self._last_page_text = await self.connection.get_html(urls.URL_ELIXIR)
         item_id = use.binding_dict.get(elixir_name)  # type: ignore[call-overload]
         if item_id is None:
             msg = f"Unknown buff name: {elixir_name}\nNeed update binding_dict in use.py"
@@ -272,7 +274,7 @@ class Buff:
         finder_use_item = re.compile(item_pattern)
 
         for _ in range(count):
-            result = finder_use_item.finditer(self.last_page_text)
+            result = finder_use_item.finditer(self._last_page_text)
 
             if not result:
                 break
@@ -280,7 +282,7 @@ class Buff:
             try:
                 item = next(result).group(0)
             except StopIteration:
-                msg = f"Can't find item: {elixir_name}"
+                msg = f"{self.connection.login} Can't find item: {elixir_name}"
                 self.logger.exception(msg)
                 break
 
@@ -294,10 +296,10 @@ class Buff:
                 key, value = item.split("=")
                 params[key] = value
 
-            self.last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
+            self._last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
 
     async def _use_scroll(self, *, scroll_name: Scroll = Scroll.STONE_SKIN, count: int = 1) -> None:
-        self.last_page_text = await self.connection.get_html(urls.URL_SCROLL)
+        self._last_page_text = await self.connection.get_html(urls.URL_SCROLL)
         item_id = use.binding_dict.get(scroll_name)  # type: ignore[call-overload]
         if item_id is None:
             msg = f"Unknown buff name: {scroll_name}\nNeed update binding_dict in use.py"
@@ -309,7 +311,7 @@ class Buff:
         finder_use_item = re.compile(item_pattern)
 
         for _ in range(count):
-            result = finder_use_item.finditer(self.last_page_text)
+            result = finder_use_item.finditer(self._last_page_text)
 
             if not result:
                 break
@@ -317,7 +319,7 @@ class Buff:
             try:
                 item = next(result).group(0)
             except StopIteration:
-                msg = f"Can't find item: {scroll_name}"
+                msg = f"{self.connection.login} Can't find item: {scroll_name}"
                 self.logger.exception(msg)
                 break
 
@@ -331,4 +333,4 @@ class Buff:
                 key, value = item.split("=")
                 params[key] = value
 
-            self.last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)
+            self._last_page_text = await self.connection.get_html(urls.URL_MAIN, params=params)

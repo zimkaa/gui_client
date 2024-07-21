@@ -121,9 +121,7 @@ class AsistFight:
         self.log_page = 1
 
     def _is_alive(self, hp: str) -> bool:
-        if hp == "0":
-            return False
-        return True
+        return hp != "0"
 
     def _raise_error(self) -> None:
         text_for_message = f"{self.login} YOU KILLED BUT FIGHT NOT ENDED"
@@ -344,7 +342,7 @@ class AsistFight:
         await self.get_logs()
 
     @timing_decorator()
-    async def run_fight(  # noqa: PLR0913
+    async def run_fight(
         self,
         last_page_text: str,
         ab_started: bool,  # noqa: FBT001

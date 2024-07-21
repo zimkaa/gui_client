@@ -1,6 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass
+from dataclasses import field
 from datetime import timedelta
 from enum import StrEnum
 from enum import auto
@@ -43,11 +44,11 @@ class Effect:
     type_: ElementType
     castle: list[MagicTower] | None = None
     count: int = 1
-    equivalent: str = ""
+    equivalent: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         merged_dictionary = {**equivalent_potion_dict, **equivalent_scroll_dict}
-        self.equivalent = merged_dictionary.get(self.name) or self.name
+        self.equivalent = [merged_dictionary.get(self.name) or self.name]
 
 
 class PersonEffects:
@@ -60,24 +61,25 @@ class PersonEffects:
     def _match_needs_and_active(self) -> None:
         logger.debug("_match_needs_and_active")
         for need_effect in self.need_effects:
-            if element := self.active_effects.get(need_effect.equivalent):
-                count = element.count
-                if count != need_effect.count:
-                    if need_effect.type_ == ElementType.POTION and count == MAX_POTION_USE:
-                        break
-                    if count < need_effect.count:
-                        new_count = need_effect.count - count
-                        new_effect = Effect(name=need_effect.name, count=new_count, type_=need_effect.type_)
-                        self.effects_to_use.append(new_effect)
-                    if count > need_effect.count:
-                        text = f"Active effect {need_effect.name} count more than need"
-                        logger.debug(text)
-                        break
+            for element_name in need_effect.equivalent:
+                if element := self.active_effects.get(element_name):
+                    count = element.count
+                    if count != need_effect.count:
+                        if need_effect.type_ == ElementType.POTION and count == MAX_POTION_USE:
+                            return
+                        if count < need_effect.count:
+                            new_count = need_effect.count - count
+                            new_effect = Effect(name=need_effect.name, count=new_count, type_=need_effect.type_)
+                            self.effects_to_use.append(new_effect)
+                        if count > need_effect.count:
+                            text = f"Active effect {need_effect.name} count more than need"
+                            logger.debug(text)
+                            return
+                    else:
+                        logger.debug(f"Effect {need_effect.name} already active")
                 else:
-                    logger.debug(f"Effect {need_effect.name} already active")
-            else:
-                new_effect = deepcopy(need_effect)
-                self.effects_to_use.append(new_effect)
+                    new_effect = deepcopy(need_effect)
+                    self.effects_to_use.append(new_effect)
 
     def get_effects(self) -> list[Effect] | None:
         logger.debug("get_effects  START!!!!")
