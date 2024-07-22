@@ -103,7 +103,7 @@ class LinkedList:
             node = node.next
 
 
-class AsistFight:
+class AssistFight:
     def __init__(
         self,
         connection: Connection,

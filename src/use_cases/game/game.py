@@ -13,7 +13,7 @@ from src.domain.value_object.classes import PersonType
 from src.infrastructure.request import Connection
 from src.infrastructure.request import my_ip
 from src.use_cases.game.buff import Buff
-from src.use_cases.game.fight_asist import AsistFight
+from src.use_cases.game.fight_assist import AssistFight
 from src.use_cases.game.location.base import Location
 
 
@@ -40,7 +40,7 @@ class User:
 
         self.logger = logger
 
-        self.fight: AsistFight
+        self.fight: AssistFight
         self._location: Location
         self.buff: Buff
         self._saved_effects: list[effects.Effect] | None = None
@@ -95,7 +95,7 @@ class User:
             self.last_page_text = await self.connection.start()
             self.online = True
 
-        self.fight = AsistFight(
+        self.fight = AssistFight(
             connection=self.connection,
             login=self.login,
             person_type=self.person_type,
@@ -129,7 +129,7 @@ class User:
             self.last_page_text = await self.connection.start()
             self.online = True
 
-        self.fight = AsistFight(
+        self.fight = AssistFight(
             connection=self.connection,
             login=self.login,
             person_type=self.person_type,
