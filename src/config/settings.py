@@ -65,6 +65,7 @@ class DungeonSettings(BaseModel):
 class PersonSettings(BaseModel):
     LOGIN: str = Field(default="None")
     PASSWORD: str = Field(default="None")
+    FLASH: str = Field(default="")
 
 
 class Settings(BaseSettings):

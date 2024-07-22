@@ -145,3 +145,14 @@ class PasswordElement(TextFieldElement):
             kwargs["password"] = True
 
         super().__init__(**kwargs)
+
+
+class FlashElement(TextFieldElement):
+    def __init__(self, **kwargs) -> None:
+        if "label" not in kwargs:
+            kwargs["label"] = "FlashPassword"
+
+        if "password" not in kwargs:
+            kwargs["password"] = True
+
+        super().__init__(**kwargs)

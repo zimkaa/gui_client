@@ -17,6 +17,7 @@ class UserInfo:
     password: str
     type_: PersonType
     ip: str
+    flash_password: str | None = None
     proxy_data: Proxy | None = None
 
 
@@ -25,6 +26,8 @@ def _get_person_login_info(file_name: Path) -> UserInfo:
     root = tree.getroot()
 
     user = root.find("user").attrib
+    logger.info(f"{user=}")
+    logger.info(f"{type(user)=}")
 
     proxy = root.find("proxy").attrib
     ip, port = proxy["address"].split(":")
@@ -39,6 +42,7 @@ def _get_person_login_info(file_name: Path) -> UserInfo:
     return UserInfo(
         login=user["name"],
         password=user["password"],
+        flash_password=user.get("flash"),
         ip=ip,
         proxy_data=user_proxy_data,
         type_=mag_or_warrior,

@@ -24,6 +24,7 @@ from src.config import settings
 from src.config.game import connection
 from src.config.game import constants
 from src.config.game import urls
+from src.domain.pattern.login.compiled import finder_flash_pass
 from src.infrastructure.errors import exception
 from src.infrastructure.errors import request
 from src.infrastructure.errors.game import LoginError
@@ -58,6 +59,7 @@ class Connection(BaseConnection):
         self,
         login: str,
         password: str,
+        flash_pass: str | None = None,
         proxy_data: Proxy | None = None,
     ) -> None:
         self.cookies_txt_file_path = COOKIE_FOLDER / f"{login}_cookies.txt"
@@ -69,6 +71,8 @@ class Connection(BaseConnection):
                 "proxy": proxy_data.proxy,
                 "proxy_auth": proxy_data.proxy_auth,
             }
+
+        self._flash_pass = flash_pass
         form_data = aiohttp.FormData(charset="windows-1251")  # cp1251
         form_data.add_field("player_nick", login)
         form_data.add_field("player_password", password)
@@ -133,8 +137,10 @@ class Connection(BaseConnection):
         if not self._cookies:
             logger.debug("_is_valid_cookies self._cookies NO COOKIES")
             return False
-
-        user = self._cookies.get(("neverlands.ru", "/")).get("NeverNick").value  # type: ignore[union-attr]
+        try:
+            user = self._cookies.get(("neverlands.ru", "/")).get("NeverNick").value  # type: ignore[union-attr]
+        except AttributeError:
+            return False
         login = quote(self.login, encoding=constants.ENCODING)
         login = login.replace("~", "%7E")
         login = login.replace("%20", "+")
@@ -194,7 +200,17 @@ class Connection(BaseConnection):
         auth_headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        await self.post_html(urls.URL_GAME, data=self._data, auth_headers=auth_headers)  # type: ignore[arg-type]
+        result = await self.post_html(urls.URL_GAME, data=self._data, auth_headers=auth_headers)  # type: ignore[arg-type]
+
+        if self._flash_pass:
+            logger.debug(result)
+            nid = finder_flash_pass.findall(result)
+            if nid:
+                form_data = aiohttp.FormData(charset="windows-1251")  # cp1251
+                form_data.add_field("flcheck", self._flash_pass)
+                form_data.add_field("nid", nid[0])
+                result = await self.post_html(urls.URL_GAME, data=form_data, auth_headers=auth_headers)
+                logger.debug(result)
 
         self._save_cookies()
         return await self.get_html(urls.URL_MAIN)
@@ -263,7 +279,7 @@ class Connection(BaseConnection):
 
     @retry(
         wait=wait_incrementing(start=1, increment=1, max=3),
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(2),
         after=after_log(request_error_file_logger, logging.WARNING),
         reraise=True,
     )  # noqa: ERA001, RUF100
@@ -328,7 +344,7 @@ class Connection(BaseConnection):
 
     @retry(
         wait=wait_incrementing(start=1, increment=1, max=3),
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(2),
         after=after_log(request_error_file_logger, logging.WARNING),
         reraise=True,
     )  # noqa: ERA001, RUF100

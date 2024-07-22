@@ -28,7 +28,7 @@ class User:
         self.connection: Connection
         if login:
             self.login = login
-        self.user_info = user_info
+        self._user_info = user_info
         self.last_page_text: str = ""
 
         self.online: bool = False
@@ -79,17 +79,18 @@ class User:
         self._active = not self._active
 
     async def new_init_connection(self) -> None:
-        assert self.user_info is not None
-        self.person_type = self.user_info.type_
+        assert self._user_info is not None
+        self.person_type = self._user_info.type_
 
-        await self._check_ip(ip=self.user_info.ip, proxy_data=self.user_info.proxy_data, proxy=True)
+        await self._check_ip(ip=self._user_info.ip, proxy_data=self._user_info.proxy_data, proxy=True)
 
         assert self.login is not None
         if not self.error:
             self.connection = Connection(
-                proxy_data=self.user_info.proxy_data,
+                proxy_data=self._user_info.proxy_data,
                 login=self.login,
-                password=self.user_info.password,
+                password=self._user_info.password,
+                flash_pass=self._user_info.flash_password,
             )
             self.last_page_text = await self.connection.start()
             self.online = True
@@ -109,6 +110,7 @@ class User:
         login: str,
         password: str,
         mag_or_warrior: str,
+        flash_password: str | None = None,
         proxy_data: Proxy | None = None,
         proxy: bool = False,  # noqa: FBT001, FBT002
     ) -> None:
@@ -122,6 +124,7 @@ class User:
                 proxy_data=proxy_data,
                 login=self.login,
                 password=password,
+                flash_pass=flash_password,
             )
             self.last_page_text = await self.connection.start()
             self.online = True

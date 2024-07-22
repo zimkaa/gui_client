@@ -21,6 +21,7 @@ class LoginComponent(ft.View):
                 self.top_bar,
                 self.login,
                 self.password,
+                self.flash_password,
                 self.mag_or_warrior,
                 self.label_proxy,
                 self.proxy,
@@ -44,6 +45,7 @@ class LoginComponent(ft.View):
         self.logger.debug("_create_login_elements")
         self.login = login.LoginElement(value=settings.person.LOGIN)
         self.password = login.PasswordElement(value=settings.person.PASSWORD)
+        self.flash_password = login.FlashElement(value=settings.person.FLASH)
         self.label_proxy = login.LabelProxy()
         self.proxy = login.ProxyCheckbox(on_change=self.checkbox_chang_visible)
         self.ip = login.IpElement(value=settings.connection.PROXY_IP)
@@ -67,6 +69,7 @@ class LoginComponent(ft.View):
         self.logger.debug("_clear_values")
         self.login.value = ""
         self.password.value = ""
+        self.flash_password.value = ""
         self.ip.value = ""
         self.pr_log.value = ""
         self.pr_pass.value = ""
@@ -83,6 +86,7 @@ class LoginComponent(ft.View):
         await self.game.init_connection(
             login=self.login.value,
             password=self.password.value,
+            flash_password=self.flash_password.value,
             proxy=self.proxy.value,
             proxy_data=proxy_data,
             ip=self.ip.value,
